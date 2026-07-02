@@ -1,0 +1,2038 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Costo tragitto condiviso</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#23302B">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Tragitto">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  :root {
+    /* Neutri / superfici */
+    --bg: #f4f4f1;
+    --surface: #ffffff;
+    --surface-2: #f6f6f2;
+    --line: #e5e5df;
+    --line-2: #d7d7cf;
+    /* Antracite (brand / testo forte) */
+    --ink: #23302b;
+    --ink-hover: #2e3d37;
+    --text: #242c28;
+    --text-2: #59615b;
+    --text-3: #8a908b;
+    /* Verde salvia (accento) */
+    --sage: #6f8c7a;
+    --sage-strong: #4d6b5a;
+    --sage-bg: #e8efe9;
+    --sage-bg-2: #f0f4f1;
+    --sage-line: #d4e0d7;
+    /* Semantici */
+    --warn-bg: #f4ecdb;
+    --warn-text: #7a5a1e;
+    --warn-line: #e0c88a;
+    --error-text: #9c3a34;
+    --error-bg: #f3e5e3;
+    --ok-text: #40795a;
+    /* Forma */
+    --radius: 12px;
+    --radius-sm: 9px;
+    --shadow: 0 1px 2px rgba(35,48,43,0.04), 0 4px 14px rgba(35,48,43,0.04);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 20px 16px 56px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    line-height: 1.45;
+  }
+  .wrap { max-width: 540px; margin: 0 auto; }
+
+  /* --- Header / brand --- */
+  .app-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .brand-mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    background: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    box-shadow: var(--shadow);
+  }
+  .brand-mark svg { width: 26px; height: 26px; display: block; }
+  h1 {
+    font-size: 20px;
+    font-weight: 650;
+    letter-spacing: -0.015em;
+    margin: 0;
+    color: var(--ink);
+  }
+  p.sub {
+    font-size: 13.5px;
+    color: var(--text-2);
+    margin: 0 0 20px;
+    max-width: 46ch;
+  }
+  h2.card-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--text-3);
+    margin: 0 0 14px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .full { grid-column: 1 / -1; }
+  label {
+    font-size: 12px;
+    color: var(--text-2);
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  input, button, select {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+  }
+  input::placeholder { color: var(--text-3); }
+  select {
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2359615b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--sage);
+    box-shadow: 0 0 0 3px rgba(111,140,122,0.18);
+  }
+  input[type="color"] {
+    padding: 3px;
+    width: 42px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  input[type="checkbox"] {
+    width: auto;
+    height: auto;
+    accent-color: var(--ink);
+    margin-right: 6px;
+    vertical-align: -1px;
+  }
+
+  button {
+    background: var(--ink);
+    color: #fff;
+    border: 1px solid var(--ink);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.005em;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color .12s ease, border-color .12s ease, color .12s ease;
+  }
+  button:hover:not(:disabled) { background: var(--ink-hover); border-color: var(--ink-hover); }
+  button.secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--line-2);
+    font-weight: 550;
+  }
+  button.secondary:hover:not(:disabled) { background: var(--surface-2); border-color: var(--line-2); }
+  button.ghost {
+    background: transparent;
+    color: var(--sage-strong);
+    border: none;
+    font-weight: 600;
+    height: auto;
+    padding: 4px 2px;
+    width: auto;
+  }
+  button.ghost:hover:not(:disabled) { background: transparent; color: var(--ink); }
+  button.danger { color: var(--error-text); }
+  button.secondary.danger:hover:not(:disabled) { border-color: var(--error-text); background: var(--error-bg); }
+  button.small {
+    height: 42px;
+    width: 42px;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  button.wide { width: auto; padding: 0 16px; }
+  button:disabled { opacity: 0.55; cursor: default; }
+  button:active:not(:disabled) { transform: translateY(0.5px); }
+  :focus-visible { outline: 2px solid var(--sage); outline-offset: 2px; }
+
+  .icon { width: 16px; height: 16px; display: inline-block; flex: none; }
+
+  .field { margin-bottom: 6px; }
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-3);
+    margin: 0 0 3px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+  .card > .section-title:first-child { padding-top: 0; border-top: none; }
+  .section-hint { font-size: 12px; color: var(--text-3); margin: 0 0 10px; line-height: 1.4; }
+  .mini-label { font-size: 12px; color: var(--text-2); margin: 0 0 5px; }
+  .info-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    font-size: 13px;
+    color: var(--text-2);
+    margin-top: 12px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+  .info-row b { color: var(--text); font-weight: 650; }
+  .results { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .metric {
+    border-radius: var(--radius);
+    padding: 15px 16px;
+    border: 1px solid transparent;
+  }
+  .metric.neutral { background: var(--surface-2); border-color: var(--line); }
+  .metric.accent { background: var(--sage-bg); border-color: var(--sage-line); }
+  .metric p.label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 6px;
+    color: var(--text-3);
+  }
+  .metric.accent p.label { color: var(--sage-strong); }
+  .metric p.value { font-size: 23px; font-weight: 650; letter-spacing: -0.02em; margin: 0; color: var(--ink); }
+  .map-box { height: 200px; border-radius: var(--radius-sm); margin-top: 12px; display: none; border: 1px solid var(--line); }
+  .geo-status { font-size: 12px; color: var(--text-3); margin-top: 8px; min-height: 16px; }
+  .geo-status.error { color: var(--error-text); }
+  .geo-status.ok { color: var(--ok-text); }
+  .addr-row { display: flex; align-items: center; gap: 8px; }
+  .addr-row input { flex: 1; }
+  .swap-row { display: flex; justify-content: center; margin: 6px 0; }
+  .swap-row button { width: auto; padding: 0 14px; height: 32px; font-size: 12.5px; }
+  .tappe-list { display: flex; flex-direction: column; gap: 8px; margin: 8px 0; }
+  footer {
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--text-3);
+    margin-top: 28px;
+    line-height: 1.55;
+    padding: 0 4px;
+  }
+
+  /* --- Profile bar --- */
+  .profile-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; flex-wrap: nowrap; }
+  .profile-bar select { flex: 1; min-width: 0; font-weight: 550; }
+  .profile-bar button.small { width: 42px; }
+
+  /* --- Tabs --- */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    width: auto;
+    height: 40px;
+    padding: 0 14px;
+    background: transparent;
+    color: var(--text-3);
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    font-size: 13.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    margin-bottom: -1px;
+  }
+  .tab-btn:hover:not(.active) { background: transparent; color: var(--text-2); border-bottom-color: transparent; }
+  .tab-btn.active { color: var(--ink); background: transparent; border-bottom-color: var(--ink); }
+  .tab-btn.active:hover { background: transparent; color: var(--ink); border-bottom-color: var(--ink); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* --- Dynamic list rows --- */
+  .list-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .list-row input[type="text"] { flex: 2; min-width: 0; }
+  .list-row input[type="number"] { flex: 1; min-width: 0; }
+  .list-row select { flex: 1; min-width: 0; }
+
+  .warning-banner {
+    background: var(--warn-bg);
+    color: var(--warn-text);
+    font-size: 12.5px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--warn-line);
+    margin: 10px 0;
+    line-height: 1.4;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--sage-bg);
+    color: var(--sage-strong);
+    margin-left: 8px;
+    vertical-align: 1px;
+  }
+  .quote-persone { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }
+  .quote-persone .qp-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    padding: 11px 13px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+  }
+  .qp-row > span:last-child { text-align: right; color: var(--text-2); }
+  .qp-row .qp-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 9px; }
+  .qp-row b { font-size: 14px; color: var(--ink); font-weight: 650; }
+  .co2-line { font-size: 12.5px; color: var(--sage-strong); margin: 12px 0 0; }
+  .day-toggle-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 10px 0; }
+  .day-toggle-grid button {
+    height: 40px;
+    padding: 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    background: var(--surface);
+    color: var(--text-2);
+    border: 1px solid var(--line-2);
+  }
+  .day-toggle-grid button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .action-row button { width: auto; flex: 1; min-width: 150px; }
+  .balance-row { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .balance-row:last-child { border-bottom: none; }
+  .settle-item {
+    font-size: 13px;
+    padding: 10px 13px;
+    background: var(--sage-bg);
+    color: var(--sage-strong);
+    border-radius: var(--radius-sm);
+    margin-bottom: 7px;
+  }
+  .history-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
+  .history-table th, .history-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+  .history-table th { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); font-weight: 700; }
+  .chart-box { width: 100%; height: 168px; margin-top: 10px; }
+  .status-line { font-size: 12px; color: var(--text-3); margin-top: 8px; line-height: 1.4; }
+  .status-line.ok { color: var(--ok-text); }
+  .status-line.error { color: var(--error-text); }
+  .profile-list-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+  }
+  .profile-list-item:last-child { border-bottom: none; }
+  .profile-list-item .pl-name { flex: 1; font-weight: 600; color: var(--ink); }
+  .profile-list-item button { width: auto; padding: 0 10px; height: 32px; font-size: 12.5px; }
+  #printArea { display: none; }
+
+  @media print {
+    body * { visibility: hidden; }
+    #printArea, #printArea * { visibility: visible; }
+    #printArea { display: block; position: absolute; top: 0; left: 0; width: 100%; padding: 20px; color: #000; }
+    #printArea h1 { font-size: 20px; }
+    #printArea table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    #printArea th, #printArea td { border: 1px solid #999; padding: 6px; font-size: 12px; text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app-header">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22 42 Q42 42 42 22" fill="none" stroke="#f4f4f1" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="22" cy="42" r="5" fill="#f4f4f1"/>
+        <circle cx="42" cy="22" r="5" fill="#8ca898"/>
+      </svg>
+    </span>
+    <h1>Costo tragitto condiviso</h1>
+  </header>
+  <p class="sub">Calcola il costo di un tragitto casa-lavoro (o di qualsiasi altro spostamento) e la quota da dividere con le persone con cui lo condividi.</p>
+
+  <div class="profile-bar">
+    <select id="profiloSelect" aria-label="Tragitto salvato"></select>
+    <button type="button" class="secondary small" id="profNewBtn" title="Nuovo tragitto" aria-label="Nuovo tragitto">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+    <button type="button" class="secondary small" id="profDupBtn" title="Duplica tragitto" aria-label="Duplica tragitto">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+    </button>
+    <button type="button" class="secondary small danger" id="profDelBtn" title="Elimina tragitto" aria-label="Elimina tragitto">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>
+    </button>
+  </div>
+
+  <nav class="tabs" id="tabsNav">
+    <button type="button" class="tab-btn" data-tab="tragitto">Tragitto</button>
+    <button type="button" class="tab-btn" data-tab="persone">Persone</button>
+    <button type="button" class="tab-btn" data-tab="storico">Storico</button>
+    <button type="button" class="tab-btn" data-tab="extra">Extra</button>
+    <button type="button" class="tab-btn" data-tab="impostazioni">Impostazioni</button>
+  </nav>
+
+  <!-- ===================== TAB: TRAGITTO ===================== -->
+  <section class="tab-panel" id="tab-tragitto">
+
+    <div class="card">
+      <h2 class="card-title">Veicolo</h2>
+      <div class="field">
+        <label for="vTipo">Tipo di veicolo</label>
+        <select id="vTipo">
+          <option value="benzina">Benzina</option>
+          <option value="diesel">Diesel</option>
+          <option value="elettrico">Elettrico</option>
+        </select>
+      </div>
+      <div class="grid">
+        <div class="field">
+          <label for="vConsumo" id="vConsumoLabel">Consumo auto (km/l)</label>
+          <input type="number" id="vConsumo" value="15" min="0.1" step="0.1">
+        </div>
+        <div class="field">
+          <label for="vPrezzo" id="vPrezzoLabel">Prezzo carburante (EUR/l)</label>
+          <input type="number" id="vPrezzo" value="1.85" min="0" step="0.01">
+        </div>
+      </div>
+      <div class="field" id="mimitBox">
+        <button type="button" class="ghost" id="mimitRefreshBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-.5 4"/><path d="M20 5v6h-6"/></svg>Aggiorna prezzo da Osservatorio MIMIT</button>
+        <p class="status-line" id="mimitStatus"></p>
+      </div>
+      <div class="field" style="margin-top: 8px;">
+        <label for="vConsumoInattivita" id="vConsumoInattivitaLabel">Consumo al minimo in coda (l/h)</label>
+        <input type="number" id="vConsumoInattivita" value="0.7" min="0" step="0.1">
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Percorso</h2>
+      <p class="section-hint">Come viene percorso il tragitto in una giornata tipo?</p>
+      <div class="field">
+        <select id="routeMode">
+          <option value="solo_andata">Solo andata (percorso una volta al giorno)</option>
+          <option value="ar_stesso">Andata e ritorno, stesso percorso</option>
+          <option value="ar_diverso">Andata e ritorno, percorsi diversi</option>
+        </select>
+      </div>
+
+      <p class="section-title" id="andataTitle">Distanza andata</p>
+      <p class="section-hint">Inseriscila a mano, oppure calcolala dagli indirizzi (usa OpenStreetMap, gratuito, nessuna chiave richiesta).</p>
+      <div class="field">
+        <label for="andDistanza">Distanza (km)</label>
+        <input type="number" id="andDistanza" value="15" min="0" step="0.5">
+      </div>
+      <div class="field">
+        <p class="mini-label">Indirizzo di partenza</p>
+        <div class="addr-row">
+          <input type="text" id="andPartenza" placeholder="Via Roma 1, Milano">
+          <button type="button" class="secondary small" id="andGeoBtn" title="Usa la mia posizione attuale"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
+        </div>
+      </div>
+      <div class="swap-row">
+        <button type="button" class="secondary" id="andSwapBtn">&#8645; Inverti partenza / arrivo</button>
+      </div>
+      <div class="field">
+        <p class="mini-label">Indirizzo di arrivo</p>
+        <input type="text" id="andArrivo" placeholder="Corso Italia 20, Milano">
+      </div>
+      <p class="mini-label" style="margin-top: 8px;">Tappe intermedie (opzionale)</p>
+      <div class="tappe-list" id="andTappeContainer"></div>
+      <button type="button" class="secondary" id="andAddTappaBtn">+ Aggiungi tappa</button>
+      <button id="andCalcolaBtn" style="margin-top: 12px;">Calcola distanza dagli indirizzi</button>
+      <div class="geo-status" id="andGeoStatus"></div>
+      <div class="map-box" id="mapAndata"></div>
+
+      <div id="ritornoBlock" style="display:none;">
+        <p class="section-title">Distanza ritorno</p>
+        <p class="section-hint">Percorso diverso da quello di andata: calcolalo separatamente.</p>
+        <div class="field">
+          <label for="retDistanza">Distanza (km)</label>
+          <input type="number" id="retDistanza" value="15" min="0" step="0.5">
+        </div>
+        <div class="field">
+          <p class="mini-label">Indirizzo di partenza (ritorno)</p>
+          <div class="addr-row">
+            <input type="text" id="retPartenza" placeholder="Corso Italia 20, Milano">
+            <button type="button" class="secondary small" id="retGeoBtn" title="Usa la mia posizione attuale"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
+          </div>
+        </div>
+        <div class="swap-row">
+          <button type="button" class="secondary" id="retSwapBtn">&#8645; Inverti partenza / arrivo</button>
+        </div>
+        <div class="field">
+          <p class="mini-label">Indirizzo di arrivo (ritorno)</p>
+          <input type="text" id="retArrivo" placeholder="Via Roma 1, Milano">
+        </div>
+        <p class="mini-label" style="margin-top: 8px;">Tappe intermedie (opzionale)</p>
+        <div class="tappe-list" id="retTappeContainer"></div>
+        <button type="button" class="secondary" id="retAddTappaBtn">+ Aggiungi tappa</button>
+        <button id="retCalcolaBtn" style="margin-top: 12px;">Calcola distanza dagli indirizzi</button>
+        <div class="geo-status" id="retGeoStatus"></div>
+        <div class="map-box" id="mapRitorno"></div>
+      </div>
+
+      <div class="field" style="margin-top: 12px;" id="giorniFieldBox">
+        <label for="giorni">Giorni/settimana</label>
+        <input type="number" id="giorni" value="5" min="1" max="7" step="1">
+      </div>
+      <p class="status-line" id="giorniAttiviHint"></p>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Traffico di oggi</h2>
+      <p class="section-hint">Apri il tragitto in Google Maps: mostra il tempo stimato col traffico attuale e quello senza traffico.</p>
+      <div class="grid" id="trafficoGrid">
+        <p class="mini-label" id="trafM-label">Mattina</p>
+        <p class="mini-label" id="trafS-label">Sera</p>
+        <input type="number" id="conM" placeholder="Con traffico (min)" value="0" min="0" step="1">
+        <input type="number" id="conS" placeholder="Con traffico (min)" value="0" min="0" step="1">
+        <input type="number" id="senzaM" placeholder="Senza traffico (min)" value="0" min="0" step="1">
+        <input type="number" id="senzaS" placeholder="Senza traffico (min)" value="0" min="0" step="1">
+      </div>
+      <div class="info-row">
+        <span>Coda mattina <b id="codaM">-</b></span>
+        <span id="codaSWrap">Coda sera <b id="codaS">-</b></span>
+        <span>Extra traffico/giorno <b id="costoTraffico">-</b></span>
+      </div>
+    </div>
+
+    <div class="results">
+      <div class="metric neutral">
+        <p class="label">Costo tragitto/giorno</p>
+        <p class="value" id="costoGiorno">-</p>
+      </div>
+      <div class="metric neutral">
+        <p class="label">Costo tragitto/settimana</p>
+        <p class="value" id="costoSettimana">-</p>
+      </div>
+    </div>
+    <div class="card" style="margin-top: 16px;">
+      <h2 class="card-title">Quota per persona</h2>
+      <div id="warningQuote"></div>
+      <div class="quote-persone" id="quotePersone"></div>
+      <p class="co2-line" id="co2Riepilogo"></p>
+    </div>
+
+    <div class="action-row">
+      <button type="button" class="secondary" id="registraOggiBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v16l-6-4-6 4z"/></svg>Registra oggi nello storico</button>
+      <button type="button" class="secondary" id="stampaBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5M7 18H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v6H7z"/></svg>Stampa / esporta nota spese</button>
+    </div>
+  </section>
+
+  <!-- ===================== TAB: PERSONE ===================== -->
+  <section class="tab-panel" id="tab-persone">
+    <div class="card">
+      <h2 class="card-title">Persone</h2>
+      <p class="section-hint">Tutte le persone tra cui va diviso il costo del tragitto (includi anche te stesso).</p>
+      <div class="field">
+        <label for="divisioneMode">Modalità di divisione dei costi</label>
+        <select id="divisioneMode">
+          <option value="percentuale">Percentuale fissa</option>
+          <option value="proporzionale">Proporzionale ai giorni percorsi</option>
+        </select>
+      </div>
+      <div id="warningPersone"></div>
+      <div id="personeList"></div>
+      <button type="button" class="secondary" id="addPersonaBtn">+ Aggiungi persona</button>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Spese extra</h2>
+      <p class="section-hint">Pedaggi, parcheggio, usura/manutenzione (es. €/km) e altre voci da dividere insieme al carburante.</p>
+      <div id="speseList"></div>
+      <button type="button" class="secondary" id="addSpesaBtn">+ Aggiungi spesa</button>
+      <p class="status-line" id="speseTotale"></p>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Saldo — chi deve a chi</h2>
+      <p class="section-hint">Registra chi ha effettivamente pagato (es. il pieno di benzina) e l'app calcola il saldo netto tra le persone, come una versione semplificata di Splitwise.</p>
+      <div class="list-row">
+        <select id="saldoPersona"></select>
+        <input type="number" id="saldoImporto" placeholder="Importo €" min="0" step="0.01">
+      </div>
+      <div class="list-row">
+        <input type="text" id="saldoDescrizione" placeholder="Descrizione (es. pieno di benzina)">
+        <input type="date" id="saldoData">
+      </div>
+      <button type="button" class="secondary" id="addSaldoBtn">+ Aggiungi al registro</button>
+      <div id="saldoList" style="margin-top: 10px;"></div>
+      <div id="saldoRiepilogo" style="margin-top: 10px;"></div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB: STORICO ===================== -->
+  <section class="tab-panel" id="tab-storico">
+    <div class="card">
+      <h2 class="card-title">Andamento nel tempo</h2>
+      <p class="section-hint">Ogni volta che registri il tragitto di oggi (dal tab "Tragitto"), viene salvato un punto storico.</p>
+      <div class="chart-box" id="chartBox"></div>
+    </div>
+    <div class="card">
+      <h2 class="card-title">Report</h2>
+      <div class="field">
+        <label for="reportPeriodo">Periodo</label>
+        <select id="reportPeriodo">
+          <option value="mese">Questo mese</option>
+          <option value="anno">Quest'anno</option>
+          <option value="tutto">Tutto lo storico</option>
+        </select>
+      </div>
+      <div id="reportBox"></div>
+      <div class="action-row">
+        <button type="button" class="secondary" id="esportaStoricoBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Esporta storico (.json)</button>
+        <button type="button" class="secondary danger" id="pulisciStoricoBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>Pulisci storico</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB: EXTRA ===================== -->
+  <section class="tab-panel" id="tab-extra">
+    <div class="card">
+      <h2 class="card-title">Impatto ambientale (CO2)</h2>
+      <p class="section-hint">Stima di quanta CO2 si risparmia condividendo l'auto rispetto a percorrere lo stesso tragitto separatamente.</p>
+      <div id="co2Box"></div>
+      <p class="status-line">Stima indicativa, basata su fattori medi di emissione per tipo di veicolo. Non tiene conto del modello specifico.</p>
+    </div>
+    <div class="card">
+      <h2 class="card-title">Confronto con il trasporto pubblico</h2>
+      <p class="section-hint">Facoltativo: inserisci il costo di un abbonamento/biglietto alternativo per confrontarlo con la tua quota.</p>
+      <div class="field">
+        <label><input type="checkbox" id="tpAbilita"> Abilita confronto</label>
+      </div>
+      <div class="field">
+        <label for="tpCosto">Costo mensile abbonamento/biglietti (EUR)</label>
+        <input type="number" id="tpCosto" min="0" step="1" value="0">
+      </div>
+      <div class="field">
+        <label for="tpPersona">Confronta con la quota di</label>
+        <select id="tpPersona"></select>
+      </div>
+      <div id="tpRisultato"></div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB: IMPOSTAZIONI ===================== -->
+  <section class="tab-panel" id="tab-impostazioni">
+    <div class="card">
+      <h2 class="card-title">Giorni attivi della settimana</h2>
+      <p class="section-hint">Facoltativo: se attivo, il numero di giorni/settimana viene calcolato dai giorni spuntati invece di essere inserito a mano (utile per tragitti non lavorativi).</p>
+      <div class="field">
+        <label><input type="checkbox" id="giorniAttiviEnable"> Usa giorni della settimana specifici</label>
+      </div>
+      <div class="day-toggle-grid" id="dayToggleGrid">
+        <button type="button" data-day="lun">Lu</button>
+        <button type="button" data-day="mar">Ma</button>
+        <button type="button" data-day="mer">Me</button>
+        <button type="button" data-day="gio">Gi</button>
+        <button type="button" data-day="ven">Ve</button>
+        <button type="button" data-day="sab">Sa</button>
+        <button type="button" data-day="dom">Do</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Tragitti salvati</h2>
+      <div id="profileManageList"></div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Backup e condivisione (.json)</h2>
+      <p class="section-hint">Il salvataggio automatico avviene già in locale sul dispositivo. Usa l'export/import per fare un backup o condividere un tragitto con un'altra persona.</p>
+      <div class="action-row">
+        <button type="button" class="secondary" id="exportCurrentBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Esporta tragitto corrente</button>
+        <button type="button" class="secondary" id="exportAllBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Esporta tutti i tragitti</button>
+      </div>
+      <div class="action-row">
+        <button type="button" class="secondary" id="importBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9M7 14l5-5 5 5M5 3h14"/></svg>Importa da file .json</button>
+        <input type="file" id="importInput" accept="application/json" style="display: none;">
+      </div>
+      <p class="status-line" id="importStatus"></p>
+    </div>
+  </section>
+
+  <footer>Geocodifica indirizzi via Nominatim e calcolo percorso via OSRM, prezzo carburante via Osservatorio Prezzi Carburanti MIMIT (dati OpenStreetMap/MIMIT, gratuiti, nessuna chiave richiesta). Usali con moderazione. I tragitti vengono salvati automaticamente sul dispositivo (localStorage); usa l'export .json per un backup o per condividerli.</footer>
+</div>
+
+<div id="printArea"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+'use strict';
+
+/* ============================================================
+   Costanti e chiavi storage
+   ============================================================ */
+const LS_PROFILES = 'tragitto_profiles_v3';
+const LS_HISTORY = 'tragitto_storico_v3';
+const LS_FUEL_CACHE = 'tragitto_prezzo_mimit_v1';
+const SCHEMA_VERSION = 3;
+
+const CO2_FACTORS_G_KM = { benzina: 192, diesel: 171, elettrico: 55 };
+const PALETTE = ['#4d6b5a', '#c07d4a', '#3f6f8c', '#9a6a86', '#7d8a4a', '#b4763c', '#5a8a7d', '#8a5a52'];
+const GIORNI_ORDER = ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom'];
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+function fmt(n) {
+  return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n || 0);
+}
+function fmtKg(n) {
+  return new Intl.NumberFormat('it-IT', { maximumFractionDigits: 1 }).format(n || 0) + ' kg';
+}
+function fmtDate(d) {
+  return new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(d));
+}
+function todayISO() {
+  // Data locale (non UTC): toISOString() sposterebbe la data di un giorno
+  // per chi non vive nel fuso UTC, specialmente vicino alla mezzanotte.
+  const d = new Date();
+  const mese = String(d.getMonth() + 1).padStart(2, '0');
+  const giorno = String(d.getDate()).padStart(2, '0');
+  return d.getFullYear() + '-' + mese + '-' + giorno;
+}
+function debounce(fn, ms) {
+  let t = null;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+function download(filename, dataStr) {
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ============================================================
+   Modello dati / fabbriche
+   ============================================================ */
+function nuovoProfilo(nome) {
+  const p1 = uid(), p2 = uid();
+  return {
+    id: uid(),
+    schemaVersion: SCHEMA_VERSION,
+    nome: nome || 'Nuovo tragitto',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    veicolo: { tipo: 'benzina', consumo: 15, prezzo: 1.85, prezzoManuale: false, consumoInattivita: 0.7 },
+    routeMode: 'ar_stesso',
+    andata: { distanza: 15, partenza: '', arrivo: '', tappe: [] },
+    ritorno: { distanza: 15, partenza: '', arrivo: '', tappe: [] },
+    giorniSettimana: 5,
+    giorniAttivi: { enabled: false, lun: true, mar: true, mer: true, gio: true, ven: true, sab: false, dom: false },
+    traffico: { conM: 0, senzaM: 0, conS: 0, senzaS: 0 },
+    persone: [
+      { id: p1, nome: 'Io', colore: PALETTE[0], percentuale: 50, giorniSettimana: 5 },
+      { id: p2, nome: 'Persona 2', colore: PALETTE[1], percentuale: 50, giorniSettimana: 5 }
+    ],
+    divisione: 'percentuale',
+    speseExtra: [],
+    saldo: [],
+    trasportoPubblico: { abilitato: false, costoMensile: 0, personaId: p1 }
+  };
+}
+
+function migraProfiloLegacy(dati) {
+  const p = nuovoProfilo(dati.nome || 'Tragitto importato');
+  p.veicolo.consumo = parseFloat(dati.consumo) || 15;
+  p.veicolo.prezzo = parseFloat(dati.prezzo) || 1.85;
+  p.veicolo.consumoInattivita = parseFloat(dati.consumoCoda) || 0.7;
+  p.veicolo.prezzoManuale = true;
+  p.andata.distanza = parseFloat(dati.distanza) || 0;
+  p.andata.partenza = dati.indirizzoPartenza || '';
+  p.andata.arrivo = dati.indirizzoArrivo || '';
+  p.andata.tappe = Array.isArray(dati.tappe) ? dati.tappe.slice() : [];
+  p.routeMode = 'ar_stesso';
+  p.giorniSettimana = parseFloat(dati.giorni) || 5;
+  p.traffico = {
+    conM: parseFloat(dati.conM) || 0,
+    senzaM: parseFloat(dati.senzaM) || 0,
+    conS: parseFloat(dati.conS) || 0,
+    senzaS: parseFloat(dati.senzaS) || 0
+  };
+  const quota = clamp(parseFloat(dati.quota) || 50, 0, 100);
+  p.persone[0].percentuale = 100 - quota;
+  p.persone[1].percentuale = quota;
+  return p;
+}
+
+/* ============================================================
+   Persistenza — profili
+   ============================================================ */
+let store = { activeId: null, profiles: {} };
+let history = [];
+
+function caricaStore() {
+  try {
+    const raw = localStorage.getItem(LS_PROFILES);
+    if (!raw) return creaStoreIniziale();
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || !parsed.profiles || !Object.keys(parsed.profiles).length) {
+      return creaStoreIniziale();
+    }
+    return parsed;
+  } catch (err) {
+    console.warn('Dati tragitti corrotti in localStorage, riparto da zero:', err);
+    return creaStoreIniziale();
+  }
+}
+function creaStoreIniziale() {
+  const p = nuovoProfilo('Tragitto principale');
+  return { activeId: p.id, profiles: { [p.id]: p } };
+}
+function salvaStore() {
+  try {
+    localStorage.setItem(LS_PROFILES, JSON.stringify(store));
+  } catch (err) {
+    console.warn('Impossibile salvare in localStorage (spazio esaurito o non disponibile):', err);
+  }
+}
+const scheduleSave = debounce(() => { store.profiles[store.activeId].updatedAt = Date.now(); salvaStore(); }, 400);
+
+function caricaStorico() {
+  try {
+    const raw = localStorage.getItem(LS_HISTORY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.warn('Storico corrotto, azzero:', err);
+    return [];
+  }
+}
+function salvaStorico() {
+  try {
+    localStorage.setItem(LS_HISTORY, JSON.stringify(history));
+  } catch (err) {
+    console.warn('Impossibile salvare lo storico:', err);
+  }
+}
+
+function profiloCorrente() { return store.profiles[store.activeId]; }
+
+/* ============================================================
+   Tabs
+   ============================================================ */
+function initTabs() {
+  const btns = document.querySelectorAll('.tab-btn');
+  btns.forEach(btn => btn.addEventListener('click', () => attivaTab(btn.dataset.tab)));
+  attivaTab('tragitto');
+}
+function attivaTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
+}
+
+/* ============================================================
+   Render completo (su switch/load profilo)
+   ============================================================ */
+function renderAll() {
+  const p = profiloCorrente();
+  renderProfileSelect();
+
+  document.getElementById('vTipo').value = p.veicolo.tipo;
+  document.getElementById('vConsumo').value = p.veicolo.consumo;
+  document.getElementById('vPrezzo').value = p.veicolo.prezzo;
+  document.getElementById('vConsumoInattivita').value = p.veicolo.consumoInattivita;
+  aggiornaEtichetteVeicolo();
+
+  document.getElementById('routeMode').value = p.routeMode;
+  document.getElementById('andDistanza').value = p.andata.distanza;
+  document.getElementById('andPartenza').value = p.andata.partenza;
+  document.getElementById('andArrivo').value = p.andata.arrivo;
+  renderTappe('and');
+
+  document.getElementById('retDistanza').value = p.ritorno.distanza;
+  document.getElementById('retPartenza').value = p.ritorno.partenza;
+  document.getElementById('retArrivo').value = p.ritorno.arrivo;
+  renderTappe('ret');
+  aggiornaVisibilitaRouteMode();
+
+  document.getElementById('giorni').value = p.giorniSettimana;
+  document.getElementById('conM').value = p.traffico.conM;
+  document.getElementById('senzaM').value = p.traffico.senzaM;
+  document.getElementById('conS').value = p.traffico.conS;
+  document.getElementById('senzaS').value = p.traffico.senzaS;
+
+  document.getElementById('divisioneMode').value = p.divisione;
+  renderPersoneList();
+  renderSpeseList();
+  renderSaldoUI();
+
+  document.getElementById('giorniAttiviEnable').checked = p.giorniAttivi.enabled;
+  renderDayToggle();
+  aggiornaVisibilitaGiorni();
+
+  document.getElementById('tpAbilita').checked = p.trasportoPubblico.abilitato;
+  document.getElementById('tpCosto').value = p.trasportoPubblico.costoMensile;
+  renderTpPersonaSelect();
+
+  renderProfileManageList();
+  renderMimitStatus();
+  renderStorico();
+
+  recalcola();
+}
+
+function aggiornaEtichetteVeicolo() {
+  const p = profiloCorrente();
+  const elettrico = p.veicolo.tipo === 'elettrico';
+  document.getElementById('vConsumoLabel').textContent = elettrico ? 'Consumo (kWh/100km)' : 'Consumo auto (km/l)';
+  document.getElementById('vPrezzoLabel').textContent = elettrico ? 'Prezzo energia (EUR/kWh)' : 'Prezzo carburante (EUR/l)';
+  document.getElementById('vConsumoInattivitaLabel').textContent = elettrico ? 'Consumo ausiliari in coda (kW)' : 'Consumo al minimo in coda (l/h)';
+  document.getElementById('mimitBox').style.display = elettrico ? 'none' : 'block';
+}
+
+/* ============================================================
+   Selettore profili + gestione (nuovo/rinomina/duplica/elimina)
+   ============================================================ */
+function renderProfileSelect() {
+  const sel = document.getElementById('profiloSelect');
+  sel.innerHTML = '';
+  Object.values(store.profiles)
+    .sort((a, b) => a.nome.localeCompare(b.nome, 'it'))
+    .forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.nome;
+      if (p.id === store.activeId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+}
+function renderProfileManageList() {
+  const box = document.getElementById('profileManageList');
+  box.innerHTML = '';
+  Object.values(store.profiles)
+    .sort((a, b) => a.nome.localeCompare(b.nome, 'it'))
+    .forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'profile-list-item';
+      row.innerHTML =
+        '<span class="pl-name">' + escapeHtml(p.nome) + (p.id === store.activeId ? ' <span class="badge">attivo</span>' : '') + '</span>' +
+        '<button type="button" class="secondary" data-act="switch" data-id="' + p.id + '">Apri</button>' +
+        '<button type="button" class="secondary" data-act="rename" data-id="' + p.id + '">Rinomina</button>' +
+        '<button type="button" class="secondary danger" data-act="delete" data-id="' + p.id + '">Elimina</button>';
+      box.appendChild(row);
+    });
+  box.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
+    const id = btn.dataset.id, act = btn.dataset.act;
+    if (act === 'switch') cambiaProfiloAttivo(id);
+    if (act === 'rename') rinominaProfilo(id);
+    if (act === 'delete') eliminaProfilo(id);
+  }));
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function cambiaProfiloAttivo(id) {
+  if (!store.profiles[id]) return;
+  store.activeId = id;
+  salvaStore();
+  renderAll();
+}
+function nuovoProfiloUI() {
+  const nome = prompt('Nome del nuovo tragitto:', 'Nuovo tragitto');
+  if (nome === null) return;
+  const p = nuovoProfilo(nome.trim() || 'Nuovo tragitto');
+  store.profiles[p.id] = p;
+  store.activeId = p.id;
+  salvaStore();
+  renderAll();
+}
+function rinominaProfilo(id) {
+  const p = store.profiles[id];
+  const nome = prompt('Nuovo nome per "' + p.nome + '":', p.nome);
+  if (nome === null || !nome.trim()) return;
+  p.nome = nome.trim();
+  p.updatedAt = Date.now();
+  salvaStore();
+  renderAll();
+}
+function duplicaProfiloUI() {
+  const p = profiloCorrente();
+  const clone = JSON.parse(JSON.stringify(p));
+  clone.id = uid();
+  clone.nome = p.nome + ' (copia)';
+  clone.createdAt = Date.now();
+  clone.updatedAt = Date.now();
+  store.profiles[clone.id] = clone;
+  store.activeId = clone.id;
+  salvaStore();
+  renderAll();
+}
+function eliminaProfilo(id) {
+  if (Object.keys(store.profiles).length <= 1) {
+    alert('Non puoi eliminare l\'unico tragitto rimasto.');
+    return;
+  }
+  const p = store.profiles[id];
+  if (!confirm('Eliminare definitivamente "' + p.nome + '"? Non riguarda lo storico già registrato.')) return;
+  delete store.profiles[id];
+  if (store.activeId === id) store.activeId = Object.keys(store.profiles)[0];
+  salvaStore();
+  renderAll();
+}
+
+/* ============================================================
+   Tappe (andata / ritorno)
+   ============================================================ */
+function renderTappe(prefix) {
+  const p = profiloCorrente();
+  const list = prefix === 'and' ? p.andata.tappe : p.ritorno.tappe;
+  const box = document.getElementById(prefix + 'TappeContainer');
+  box.innerHTML = '';
+  list.forEach((val, idx) => {
+    const row = document.createElement('div');
+    row.className = 'addr-row';
+    row.innerHTML =
+      '<input type="text" class="tappa-input" data-idx="' + idx + '" placeholder="Indirizzo tappa intermedia" value="' + escapeHtml(val) + '">' +
+      '<button type="button" class="secondary small remove-tappa" data-idx="' + idx + '" aria-label="Rimuovi tappa">&times;</button>';
+    box.appendChild(row);
+  });
+  box.querySelectorAll('.tappa-input').forEach(inp => inp.addEventListener('input', () => {
+    list[parseInt(inp.dataset.idx, 10)] = inp.value;
+    scheduleSave();
+  }));
+  box.querySelectorAll('.remove-tappa').forEach(btn => btn.addEventListener('click', () => {
+    list.splice(parseInt(btn.dataset.idx, 10), 1);
+    renderTappe(prefix);
+    scheduleSave();
+  }));
+}
+function getTappeVal(prefix) {
+  return Array.from(document.querySelectorAll('#' + prefix + 'TappeContainer .tappa-input')).map(i => i.value.trim()).filter(v => v);
+}
+
+/* ============================================================
+   Modalità percorso
+   ============================================================ */
+function aggiornaVisibilitaRouteMode() {
+  const p = profiloCorrente();
+  const isDiverso = p.routeMode === 'ar_diverso';
+  const isSoloAndata = p.routeMode === 'solo_andata';
+  document.getElementById('ritornoBlock').style.display = isDiverso ? 'block' : 'none';
+  document.getElementById('andataTitle').textContent = isSoloAndata ? 'Distanza del tragitto' : 'Distanza andata';
+
+  document.getElementById('trafS-label').style.display = isSoloAndata ? 'none' : 'block';
+  document.getElementById('conS').style.display = isSoloAndata ? 'none' : 'block';
+  document.getElementById('senzaS').style.display = isSoloAndata ? 'none' : 'block';
+  document.getElementById('codaSWrap').style.display = isSoloAndata ? 'none' : 'inline';
+  document.getElementById('trafM-label').textContent = isSoloAndata ? 'Tragitto' : 'Mattina';
+}
+
+/* ============================================================
+   Giorni attivi
+   ============================================================ */
+function renderDayToggle() {
+  const p = profiloCorrente();
+  document.querySelectorAll('#dayToggleGrid button').forEach(btn => {
+    btn.classList.toggle('on', !!p.giorniAttivi[btn.dataset.day]);
+  });
+}
+function aggiornaVisibilitaGiorni() {
+  const p = profiloCorrente();
+  const giorniInput = document.getElementById('giorni');
+  if (p.giorniAttivi.enabled) {
+    const attivi = GIORNI_ORDER.filter(d => p.giorniAttivi[d]);
+    p.giorniSettimana = attivi.length;
+    giorniInput.value = attivi.length;
+    giorniInput.disabled = true;
+    document.getElementById('giorniAttiviHint').textContent =
+      attivi.length ? ('Calcolato dai giorni attivi in Impostazioni: ' + attivi.length + ' giorni/settimana.') : 'Nessun giorno attivo selezionato in Impostazioni.';
+  } else {
+    giorniInput.disabled = false;
+    document.getElementById('giorniAttiviHint').textContent = '';
+  }
+}
+
+/* ============================================================
+   Persone
+   ============================================================ */
+function renderPersoneList() {
+  const p = profiloCorrente();
+  const box = document.getElementById('personeList');
+  const proporzionale = p.divisione === 'proporzionale';
+  box.innerHTML = '';
+  p.persone.forEach(persona => {
+    const row = document.createElement('div');
+    row.className = 'list-row';
+    row.dataset.id = persona.id;
+    row.innerHTML =
+      '<input type="color" class="pp-colore" value="' + persona.colore + '">' +
+      '<input type="text" class="pp-nome" placeholder="Nome" value="' + escapeHtml(persona.nome) + '">' +
+      (proporzionale
+        ? '<input type="number" class="pp-giorni" min="0" step="0.5" value="' + persona.giorniSettimana + '" title="Giorni/settimana">'
+        : '<input type="number" class="pp-pct" min="0" max="100" step="1" value="' + persona.percentuale + '" title="Percentuale %">') +
+      '<button type="button" class="secondary small remove-persona" aria-label="Rimuovi persona">&times;</button>';
+    box.appendChild(row);
+  });
+  box.querySelectorAll('.list-row').forEach(row => {
+    const id = row.dataset.id;
+    const persona = p.persone.find(x => x.id === id);
+    row.querySelector('.pp-colore').addEventListener('input', e => { persona.colore = e.target.value; scheduleSave(); recalcola(); });
+    row.querySelector('.pp-nome').addEventListener('input', e => { persona.nome = e.target.value; scheduleSave(); recalcola(); renderTpPersonaSelect(); renderSaldoPersonaSelect(); });
+    const pctInp = row.querySelector('.pp-pct');
+    if (pctInp) pctInp.addEventListener('input', e => { persona.percentuale = parseFloat(e.target.value) || 0; scheduleSave(); recalcola(); });
+    const giorniInp = row.querySelector('.pp-giorni');
+    if (giorniInp) giorniInp.addEventListener('input', e => { persona.giorniSettimana = parseFloat(e.target.value) || 0; scheduleSave(); recalcola(); });
+    row.querySelector('.remove-persona').addEventListener('click', () => {
+      if (p.persone.length <= 1) { alert('Deve rimanere almeno una persona.'); return; }
+      p.persone = p.persone.filter(x => x.id !== id);
+      renderPersoneList();
+      renderTpPersonaSelect();
+      renderSaldoPersonaSelect();
+      scheduleSave();
+      recalcola();
+    });
+  });
+}
+function aggiungiPersona() {
+  const p = profiloCorrente();
+  const idx = p.persone.length;
+  p.persone.push({ id: uid(), nome: 'Persona ' + (idx + 1), colore: PALETTE[idx % PALETTE.length], percentuale: 0, giorniSettimana: p.giorniSettimana });
+  renderPersoneList();
+  renderTpPersonaSelect();
+  renderSaldoPersonaSelect();
+  scheduleSave();
+  recalcola();
+}
+
+/* ============================================================
+   Spese extra
+   ============================================================ */
+function renderSpeseList() {
+  const p = profiloCorrente();
+  const box = document.getElementById('speseList');
+  box.innerHTML = '';
+  p.speseExtra.forEach(spesa => {
+    const row = document.createElement('div');
+    row.className = 'list-row';
+    row.dataset.id = spesa.id;
+    row.innerHTML =
+      '<input type="text" class="sp-nome" placeholder="Voce (es. pedaggio)" value="' + escapeHtml(spesa.nome) + '">' +
+      '<input type="number" class="sp-importo" placeholder="EUR" min="0" step="0.01" value="' + spesa.importo + '">' +
+      '<select class="sp-periodo">' +
+        '<option value="settimanale"' + (spesa.periodo === 'settimanale' ? ' selected' : '') + '>Settimanale</option>' +
+        '<option value="mensile"' + (spesa.periodo === 'mensile' ? ' selected' : '') + '>Mensile</option>' +
+        '<option value="una_tantum"' + (spesa.periodo === 'una_tantum' ? ' selected' : '') + '>Una tantum</option>' +
+      '</select>' +
+      '<button type="button" class="secondary small remove-spesa" aria-label="Rimuovi spesa">&times;</button>';
+    box.appendChild(row);
+  });
+  box.querySelectorAll('.list-row').forEach(row => {
+    const id = row.dataset.id;
+    const spesa = p.speseExtra.find(x => x.id === id);
+    row.querySelector('.sp-nome').addEventListener('input', e => { spesa.nome = e.target.value; scheduleSave(); recalcola(); });
+    row.querySelector('.sp-importo').addEventListener('input', e => { spesa.importo = parseFloat(e.target.value) || 0; scheduleSave(); recalcola(); });
+    row.querySelector('.sp-periodo').addEventListener('change', e => { spesa.periodo = e.target.value; scheduleSave(); recalcola(); });
+    row.querySelector('.remove-spesa').addEventListener('click', () => {
+      p.speseExtra = p.speseExtra.filter(x => x.id !== id);
+      renderSpeseList();
+      scheduleSave();
+      recalcola();
+    });
+  });
+}
+function aggiungiSpesa() {
+  const p = profiloCorrente();
+  p.speseExtra.push({ id: uid(), nome: '', importo: 0, periodo: 'mensile' });
+  renderSpeseList();
+  scheduleSave();
+  recalcola();
+}
+function speseExtraSettimanale(p) {
+  return p.speseExtra.reduce((sum, s) => {
+    if (s.periodo === 'settimanale') return sum + (s.importo || 0);
+    if (s.periodo === 'mensile') return sum + (s.importo || 0) * 12 / 52;
+    return sum; // una_tantum non ricorre nel calcolo settimanale
+  }, 0);
+}
+
+/* ============================================================
+   Saldo (chi deve a chi)
+   ============================================================ */
+function renderSaldoPersonaSelect() {
+  const p = profiloCorrente();
+  const sel = document.getElementById('saldoPersona');
+  const prev = sel.value;
+  sel.innerHTML = '';
+  p.persone.forEach(persona => {
+    const opt = document.createElement('option');
+    opt.value = persona.id;
+    opt.textContent = persona.nome;
+    sel.appendChild(opt);
+  });
+  if (p.persone.some(x => x.id === prev)) sel.value = prev;
+}
+function renderSaldoUI() {
+  renderSaldoPersonaSelect();
+  document.getElementById('saldoData').value = todayISO();
+  renderSaldoList();
+}
+function renderSaldoList() {
+  const p = profiloCorrente();
+  const box = document.getElementById('saldoList');
+  if (!p.saldo.length) { box.innerHTML = '<p class="status-line">Nessun pagamento registrato.</p>'; renderSaldoRiepilogo(); return; }
+  box.innerHTML = '';
+  p.saldo.slice().sort((a, b) => b.data.localeCompare(a.data)).forEach(voce => {
+    const persona = p.persone.find(x => x.id === voce.personaId);
+    const row = document.createElement('div');
+    row.className = 'balance-row';
+    row.innerHTML =
+      '<span>' + fmtDate(voce.data) + ' — <b>' + escapeHtml(persona ? persona.nome : '—') + '</b> ha pagato ' + fmt(voce.importo) + (voce.descrizione ? ' (' + escapeHtml(voce.descrizione) + ')' : '') + '</span>' +
+      '<button type="button" class="ghost danger remove-saldo" data-id="' + voce.id + '">rimuovi</button>';
+    box.appendChild(row);
+  });
+  box.querySelectorAll('.remove-saldo').forEach(btn => btn.addEventListener('click', () => {
+    p.saldo = p.saldo.filter(x => x.id !== btn.dataset.id);
+    renderSaldoList();
+    scheduleSave();
+  }));
+  renderSaldoRiepilogo();
+}
+function pesiDivisione(p) {
+  if (p.divisione === 'proporzionale') {
+    const tot = p.persone.reduce((s, x) => s + (x.giorniSettimana || 0), 0) || 1;
+    return Object.fromEntries(p.persone.map(x => [x.id, (x.giorniSettimana || 0) / tot]));
+  }
+  const tot = p.persone.reduce((s, x) => s + (x.percentuale || 0), 0) || 1;
+  return Object.fromEntries(p.persone.map(x => [x.id, (x.percentuale || 0) / tot]));
+}
+function renderSaldoRiepilogo() {
+  const p = profiloCorrente();
+  const box = document.getElementById('saldoRiepilogo');
+  if (!p.saldo.length) { box.innerHTML = ''; return; }
+  const pesi = pesiDivisione(p);
+  const saldi = Object.fromEntries(p.persone.map(x => [x.id, 0]));
+  p.saldo.forEach(voce => {
+    p.persone.forEach(persona => {
+      const quota = voce.importo * (pesi[persona.id] || 0);
+      saldi[persona.id] += (persona.id === voce.personaId ? voce.importo : 0) - quota;
+    });
+  });
+  let html = '<p class="section-title" style="border-top:none;padding-top:0;">Saldo netto</p>';
+  p.persone.forEach(persona => {
+    const v = saldi[persona.id];
+    html += '<div class="balance-row"><span>' + escapeHtml(persona.nome) + '</span><b style="color:' + (v >= -0.005 ? 'var(--ok-text)' : 'var(--error-text)') + '">' + (v >= 0 ? '+' : '') + fmt(v) + '</b></div>';
+  });
+
+  const settle = calcolaSettleUp(saldi, p.persone);
+  if (settle.length) {
+    html += '<p class="section-title">Per pareggiare</p>';
+    settle.forEach(s => {
+      html += '<div class="settle-item">' + escapeHtml(s.da) + ' deve dare ' + fmt(s.importo) + ' a ' + escapeHtml(s.a) + '</div>';
+    });
+  }
+  box.innerHTML = html;
+}
+function calcolaSettleUp(saldi, persone) {
+  const nomeOf = id => (persone.find(x => x.id === id) || {}).nome || '—';
+  const creditori = [], debitori = [];
+  Object.entries(saldi).forEach(([id, v]) => {
+    if (v > 0.005) creditori.push({ id, v });
+    else if (v < -0.005) debitori.push({ id, v: -v });
+  });
+  creditori.sort((a, b) => b.v - a.v);
+  debitori.sort((a, b) => b.v - a.v);
+  const risultati = [];
+  let i = 0, j = 0;
+  while (i < debitori.length && j < creditori.length) {
+    const importo = Math.min(debitori[i].v, creditori[j].v);
+    if (importo > 0.005) risultati.push({ da: nomeOf(debitori[i].id), a: nomeOf(creditori[j].id), importo });
+    debitori[i].v -= importo;
+    creditori[j].v -= importo;
+    if (debitori[i].v <= 0.005) i++;
+    if (creditori[j].v <= 0.005) j++;
+  }
+  return risultati;
+}
+
+/* ============================================================
+   Calcolo principale
+   ============================================================ */
+function calcolaCosti(p) {
+  const consumo = p.veicolo.consumo || 0;
+  const prezzo = p.veicolo.prezzo || 0;
+  const consumoInattivita = p.veicolo.consumoInattivita || 0;
+  const elettrico = p.veicolo.tipo === 'elettrico';
+
+  const costoKm = elettrico
+    ? (consumo / 100) * prezzo
+    : (consumo > 0 ? prezzo / consumo : 0);
+
+  let kmGiorno;
+  if (p.routeMode === 'solo_andata') kmGiorno = p.andata.distanza || 0;
+  else if (p.routeMode === 'ar_diverso') kmGiorno = (p.andata.distanza || 0) + (p.ritorno.distanza || 0);
+  else kmGiorno = (p.andata.distanza || 0) * 2;
+
+  const costoBase = kmGiorno * costoKm;
+
+  const codaMattina = Math.max(0, (p.traffico.conM || 0) - (p.traffico.senzaM || 0));
+  const codaSera = p.routeMode === 'solo_andata' ? 0 : Math.max(0, (p.traffico.conS || 0) - (p.traffico.senzaS || 0));
+  const minutiCodaGiorno = codaMattina + codaSera;
+  const costoTraffico = (minutiCodaGiorno / 60) * consumoInattivita * prezzo;
+
+  const costoGiornoBase = costoBase + costoTraffico;
+  const giorni = p.giorniSettimana || 0;
+  const costoSettimanaBase = costoGiornoBase * giorni;
+
+  const speseSettimana = speseExtraSettimanale(p);
+  const costoSettimana = costoSettimanaBase + speseSettimana;
+  const costoGiorno = giorni > 0 ? costoSettimana / giorni : costoGiornoBase;
+
+  const pesi = pesiDivisione(p);
+  const quote = p.persone.map(persona => ({
+    persona,
+    giorno: costoGiorno * (pesi[persona.id] || 0),
+    settimana: costoSettimana * (pesi[persona.id] || 0)
+  }));
+
+  const nPersone = p.persone.length || 1;
+  const fattoreCO2 = CO2_FACTORS_G_KM[p.veicolo.tipo] || CO2_FACTORS_G_KM.benzina;
+  const co2GiornoKg = (kmGiorno * fattoreCO2 * (nPersone - 1)) / 1000;
+  const co2SettimanaKg = co2GiornoKg * giorni;
+
+  return {
+    kmGiorno, costoKm, codaMattina, codaSera, minutiCodaGiorno, costoTraffico,
+    costoGiorno, costoSettimana, quote, speseSettimana, co2GiornoKg, co2SettimanaKg
+  };
+}
+
+function recalcola() {
+  const p = profiloCorrente();
+  const r = calcolaCosti(p);
+
+  document.getElementById('codaM').textContent = r.codaMattina.toFixed(0) + ' min';
+  document.getElementById('codaS').textContent = r.codaSera.toFixed(0) + ' min';
+  document.getElementById('costoTraffico').textContent = fmt(r.costoTraffico);
+  document.getElementById('costoGiorno').textContent = fmt(r.costoGiorno);
+  document.getElementById('costoSettimana').textContent = fmt(r.costoSettimana);
+
+  const sommaPct = p.persone.reduce((s, x) => s + (x.percentuale || 0), 0);
+  const warnBox = document.getElementById('warningQuote');
+  const warnBox2 = document.getElementById('warningPersone');
+  if (p.divisione === 'percentuale' && Math.abs(sommaPct - 100) > 0.5) {
+    const msg = '<div class="warning-banner">Le percentuali sommano a ' + sommaPct.toFixed(0) + '% invece di 100%. Le quote qui sotto sono comunque ricalcolate in proporzione, ma ti conviene correggerle.</div>';
+    warnBox.innerHTML = msg;
+    warnBox2.innerHTML = msg;
+  } else {
+    warnBox.innerHTML = '';
+    warnBox2.innerHTML = '';
+  }
+
+  const qBox = document.getElementById('quotePersone');
+  qBox.innerHTML = r.quote.map(q =>
+    '<div class="qp-row"><span><span class="qp-dot" style="background:' + q.persona.colore + '"></span>' + escapeHtml(q.persona.nome) + '</span><span><b>' + fmt(q.giorno) + '</b>/giorno · ' + fmt(q.settimana) + '/settimana</span></div>'
+  ).join('');
+
+  document.getElementById('co2Riepilogo').textContent =
+    'CO2 risparmiata condividendo il tragitto: circa ' + fmtKg(r.co2SettimanaKg) + '/settimana (stima indicativa).';
+
+  document.getElementById('speseTotale').textContent = p.speseExtra.length
+    ? 'Totale spese extra ricorrenti: ' + fmt(r.speseSettimana) + '/settimana (le voci "una tantum" non sono incluse qui, registrale nel saldo).'
+    : '';
+
+  renderCo2Box(r, p);
+  renderTpRisultato(r, p);
+  renderSaldoRiepilogo();
+}
+
+function renderCo2Box(r, p) {
+  const box = document.getElementById('co2Box');
+  const fattore = CO2_FACTORS_G_KM[p.veicolo.tipo] || CO2_FACTORS_G_KM.benzina;
+  box.innerHTML =
+    '<div class="info-row" style="border-top:none;padding-top:0;">' +
+    '<span>Fattore emissione <b>' + fattore + ' g/km</b></span>' +
+    '<span>Persone nel tragitto <b>' + p.persone.length + '</b></span>' +
+    '</div>' +
+    '<div class="results" style="margin-top:10px;">' +
+    '<div class="metric neutral"><p class="label">CO2 risparmiata/giorno</p><p class="value">' + fmtKg(r.co2GiornoKg) + '</p></div>' +
+    '<div class="metric neutral"><p class="label">CO2 risparmiata/settimana</p><p class="value">' + fmtKg(r.co2SettimanaKg) + '</p></div>' +
+    '</div>';
+}
+
+/* ============================================================
+   Trasporto pubblico
+   ============================================================ */
+function renderTpPersonaSelect() {
+  const p = profiloCorrente();
+  const sel = document.getElementById('tpPersona');
+  const prev = sel.value || p.trasportoPubblico.personaId;
+  sel.innerHTML = '';
+  p.persone.forEach(persona => {
+    const opt = document.createElement('option');
+    opt.value = persona.id;
+    opt.textContent = persona.nome;
+    sel.appendChild(opt);
+  });
+  if (p.persone.some(x => x.id === prev)) sel.value = prev;
+}
+function renderTpRisultato(r, p) {
+  const box = document.getElementById('tpRisultato');
+  if (!p.trasportoPubblico.abilitato) { box.innerHTML = ''; return; }
+  const q = r.quote.find(x => x.persona.id === p.trasportoPubblico.personaId) || r.quote[0];
+  if (!q) { box.innerHTML = ''; return; }
+  const costoAutoMensile = q.settimana * 4.345;
+  const costoTp = p.trasportoPubblico.costoMensile || 0;
+  const risparmio = costoTp - costoAutoMensile;
+  box.innerHTML =
+    '<div class="results" style="margin-top:10px;">' +
+    '<div class="metric neutral"><p class="label">Costo auto/mese (' + escapeHtml(q.persona.nome) + ')</p><p class="value">' + fmt(costoAutoMensile) + '</p></div>' +
+    '<div class="metric ' + (risparmio >= 0 ? 'accent' : 'neutral') + '"><p class="label">' + (risparmio >= 0 ? 'Risparmio con l\'auto' : 'Risparmio col trasporto pubblico') + '</p><p class="value">' + fmt(Math.abs(risparmio)) + '</p></div>' +
+    '</div>';
+}
+
+/* ============================================================
+   Geocodifica, percorso e mappa (andata / ritorno)
+   ============================================================ */
+const mapState = { and: { map: null, layer: null }, ret: { map: null, layer: null } };
+
+async function geocode(indirizzo) {
+  const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(indirizzo);
+  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  if (!res.ok) throw new Error('Geocodifica non riuscita');
+  const data = await res.json();
+  if (!data.length) throw new Error('Indirizzo non trovato: ' + indirizzo);
+  return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), display: data[0].display_name };
+}
+async function reverseGeocode(lat, lon) {
+  const url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lon + '&zoom=18&addressdetails=1';
+  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  if (!res.ok) throw new Error('Reverse geocoding non riuscito');
+  const data = await res.json();
+  if (!data || !data.display_name) throw new Error('Nessun indirizzo trovato per questa posizione');
+  return data.display_name;
+}
+async function calcolaPercorsoMultiplo(punti) {
+  const coordStr = punti.map(p => p.lon + ',' + p.lat).join(';');
+  const url = 'https://router.project-osrm.org/route/v1/driving/' + coordStr + '?overview=full&geometries=geojson';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Calcolo percorso non riuscito');
+  const data = await res.json();
+  if (!data.routes || !data.routes.length) throw new Error('Nessun percorso trovato');
+  return data.routes[0];
+}
+
+function setupRoutingBlock(prefix) {
+  const btn = document.getElementById(prefix + 'CalcolaBtn');
+  const statusEl = document.getElementById(prefix + 'GeoStatus');
+  const mapEl = document.getElementById(prefix === 'and' ? 'mapAndata' : 'mapRitorno');
+  const mapKey = prefix;
+
+  btn.addEventListener('click', async () => {
+    const partenzaTxt = document.getElementById(prefix + 'Partenza').value.trim();
+    const arrivoTxt = document.getElementById(prefix + 'Arrivo').value.trim();
+    const tappeTxt = getTappeVal(prefix);
+
+    if (!partenzaTxt || !arrivoTxt) {
+      statusEl.textContent = 'Inserisci partenza e arrivo.';
+      statusEl.className = 'geo-status error';
+      return;
+    }
+
+    btn.disabled = true;
+    statusEl.className = 'geo-status';
+    statusEl.textContent = 'Ricerca indirizzi in corso...';
+
+    try {
+      const indirizzi = [partenzaTxt, ...tappeTxt, arrivoTxt];
+      const punti = [];
+      for (const ind of indirizzi) punti.push(await geocode(ind));
+
+      statusEl.textContent = 'Calcolo del percorso in corso...';
+      const route = await calcolaPercorsoMultiplo(punti);
+
+      const km = route.distance / 1000;
+      document.getElementById(prefix + 'Distanza').value = km.toFixed(1);
+      const p = profiloCorrente();
+      (prefix === 'and' ? p.andata : p.ritorno).distanza = km;
+      scheduleSave();
+      recalcola();
+
+      statusEl.className = 'geo-status ok';
+      statusEl.textContent = 'Distanza trovata: ' + km.toFixed(1) + ' km su ' + punti.length + ' punti (' + Math.round(route.duration / 60) + ' min stimati senza traffico).';
+
+      mapEl.style.display = 'block';
+      const ms = mapState[mapKey];
+      if (!ms.map) {
+        ms.map = L.map(mapEl.id);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: 'Map data (C) OpenStreetMap contributors',
+          maxZoom: 19
+        }).addTo(ms.map);
+      }
+      if (ms.layer) ms.map.removeLayer(ms.layer);
+      const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+      const markers = punti.map(pt => L.marker([pt.lat, pt.lon]));
+      ms.layer = L.layerGroup([L.polyline(coords, { color: '#23302b', weight: 4 }), ...markers]).addTo(ms.map);
+      ms.map.fitBounds(L.latLngBounds(coords), { padding: [20, 20] });
+      setTimeout(() => ms.map.invalidateSize(), 100);
+    } catch (err) {
+      statusEl.className = 'geo-status error';
+      statusEl.textContent = err.message || 'Si è verificato un errore.';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
+/* ============================================================
+   Geolocalizzazione
+   ============================================================ */
+function setupGeoButton(prefix) {
+  const btn = document.getElementById(prefix + 'GeoBtn');
+  const statusEl = document.getElementById(prefix + 'GeoStatus');
+  btn.addEventListener('click', () => {
+    if (!window.isSecureContext) {
+      statusEl.className = 'geo-status error';
+      statusEl.textContent = 'La geolocalizzazione richiede una connessione sicura (HTTPS) o localhost.';
+      return;
+    }
+    if (!('geolocation' in navigator)) {
+      statusEl.className = 'geo-status error';
+      statusEl.textContent = 'Geolocalizzazione non supportata da questo browser.';
+      return;
+    }
+    btn.disabled = true;
+    statusEl.className = 'geo-status';
+    statusEl.textContent = 'Rilevamento posizione in corso...';
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      try {
+        statusEl.textContent = 'Posizione trovata, ricerca indirizzo...';
+        const indirizzo = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+        document.getElementById(prefix + 'Partenza').value = indirizzo;
+        const p = profiloCorrente();
+        (prefix === 'and' ? p.andata : p.ritorno).partenza = indirizzo;
+        scheduleSave();
+        statusEl.className = 'geo-status ok';
+        statusEl.textContent = 'Posizione impostata: ' + indirizzo;
+      } catch (err) {
+        statusEl.className = 'geo-status error';
+        statusEl.textContent = err.message || 'Impossibile determinare l\'indirizzo dalla posizione.';
+      } finally {
+        btn.disabled = false;
+      }
+    }, (err) => {
+      btn.disabled = false;
+      statusEl.className = 'geo-status error';
+      const messaggi = {
+        1: 'Permesso di geolocalizzazione negato. Consentilo dalle impostazioni del browser per usare questa funzione.',
+        2: 'Posizione non disponibile al momento.',
+        3: 'Tempo scaduto nella ricerca della posizione.'
+      };
+      statusEl.textContent = messaggi[err.code] || 'Errore nella geolocalizzazione.';
+    }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
+  });
+}
+
+/* ============================================================
+   Prezzo carburante — Osservatorio Prezzi Carburanti MIMIT
+   Nota: il file CSV pubblico del MIMIT non espone header CORS pensati
+   per fetch cross-origin da browser; il tentativo qui sotto è "best effort"
+   e deve sempre fallire in modo pulito lasciando il campo modificabile a mano.
+   ============================================================ */
+async function fetchPrezziMimit() {
+  const url = 'https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv';
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) throw new Error('Servizio non raggiungibile (HTTP ' + res.status + ')');
+    const text = await res.text();
+    const righe = text.split('\n');
+    let dataEstrazione = '';
+    const m = righe[0] && righe[0].match(/(\d{4}-\d{2}-\d{2})/);
+    if (m) dataEstrazione = m[1];
+
+    let sumBenzina = 0, cntBenzina = 0, sumGasolio = 0, cntGasolio = 0;
+    for (let i = 2; i < righe.length; i++) {
+      const cols = righe[i].split('|');
+      if (cols.length < 4) continue;
+      const carburante = cols[1];
+      const prezzo = parseFloat(cols[2]);
+      const isSelf = cols[3].trim() === '1';
+      if (!isSelf || !isFinite(prezzo) || prezzo <= 0) continue;
+      if (carburante === 'Benzina') { sumBenzina += prezzo; cntBenzina++; }
+      else if (carburante === 'Gasolio') { sumGasolio += prezzo; cntGasolio++; }
+    }
+    if (!cntBenzina && !cntGasolio) throw new Error('Formato dati non riconosciuto.');
+    return {
+      benzina: cntBenzina ? sumBenzina / cntBenzina : null,
+      diesel: cntGasolio ? sumGasolio / cntGasolio : null,
+      dataEstrazione,
+      fetchedAt: Date.now()
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function caricaFuelCache() {
+  try {
+    const raw = localStorage.getItem(LS_FUEL_CACHE);
+    return raw ? JSON.parse(raw) : null;
+  } catch (err) { return null; }
+}
+function salvaFuelCache(c) {
+  try { localStorage.setItem(LS_FUEL_CACHE, JSON.stringify(c)); } catch (err) { /* storage non disponibile: ignorato */ }
+}
+
+function renderMimitStatus(msgOverride) {
+  const el = document.getElementById('mimitStatus');
+  if (msgOverride) { el.textContent = msgOverride.text; el.className = 'status-line ' + (msgOverride.cls || ''); return; }
+  const cache = caricaFuelCache();
+  const p = profiloCorrente();
+  if (p.veicolo.prezzoManuale) {
+    el.textContent = 'Prezzo impostato manualmente (ha sempre la precedenza).';
+    el.className = 'status-line';
+  } else if (cache && cache.fetchedAt) {
+    el.textContent = 'Ultimo aggiornamento riuscito: ' + fmtDate(cache.fetchedAt) + (cache.dataEstrazione ? ' (dati del ' + cache.dataEstrazione + ')' : '') + '.';
+    el.className = 'status-line ok';
+  } else {
+    el.textContent = 'Nessun aggiornamento automatico ancora riuscito. Il prezzo è inseribile sempre a mano.';
+    el.className = 'status-line';
+  }
+}
+
+async function aggiornaPrezzoMimit(automatico) {
+  const p = profiloCorrente();
+  if (p.veicolo.tipo === 'elettrico') return;
+  const btn = document.getElementById('mimitRefreshBtn');
+  if (!automatico) { btn.disabled = true; renderMimitStatus({ text: 'Recupero prezzi in corso...', cls: '' }); }
+  try {
+    const dati = await fetchPrezziMimit();
+    salvaFuelCache(dati);
+    const valore = p.veicolo.tipo === 'diesel' ? dati.diesel : dati.benzina;
+    if (valore && !p.veicolo.prezzoManuale) {
+      p.veicolo.prezzo = Math.round(valore * 1000) / 1000;
+      document.getElementById('vPrezzo').value = p.veicolo.prezzo;
+      scheduleSave();
+      recalcola();
+    }
+    renderMimitStatus();
+  } catch (err) {
+    console.warn('Aggiornamento prezzo MIMIT non riuscito (offline, CORS o endpoint cambiato):', err);
+    renderMimitStatus({ text: 'Servizio non raggiungibile al momento (offline o restrizioni del sito del Ministero). Puoi comunque inserire il prezzo a mano.', cls: 'error' });
+  } finally {
+    if (!automatico) btn.disabled = false;
+  }
+}
+
+/* ============================================================
+   Storico, grafico, report
+   ============================================================ */
+function registraOggi() {
+  const p = profiloCorrente();
+  const r = calcolaCosti(p);
+  const quoteObj = {};
+  r.quote.forEach(q => { quoteObj[q.persona.id] = { nome: q.persona.nome, importo: q.giorno }; });
+  const data = todayISO();
+  const esistente = history.find(h => h.tragittoId === p.id && h.data === data);
+  const entry = {
+    id: esistente ? esistente.id : uid(),
+    tragittoId: p.id,
+    tragittoNome: p.nome,
+    data,
+    costoGiorno: r.costoGiorno,
+    km: r.kmGiorno,
+    minutiCoda: r.minutiCodaGiorno,
+    co2Kg: r.co2GiornoKg,
+    quote: quoteObj
+  };
+  if (esistente) Object.assign(esistente, entry);
+  else history.push(entry);
+  salvaStorico();
+  renderStorico();
+  attivaTab('storico');
+  alert(esistente ? 'Voce di oggi aggiornata nello storico.' : 'Tragitto di oggi registrato nello storico.');
+}
+
+function storicoProfiloCorrente() {
+  return history.filter(h => h.tragittoId === store.activeId).sort((a, b) => a.data.localeCompare(b.data));
+}
+
+function renderStorico() {
+  renderChart();
+  renderReport();
+}
+
+function renderChart() {
+  const box = document.getElementById('chartBox');
+  const dati = storicoProfiloCorrente().slice(-30);
+  if (dati.length < 2) {
+    box.innerHTML = '<p class="status-line">Registra almeno due giornate per vedere il grafico dell\'andamento.</p>';
+    return;
+  }
+  const w = 480, h = 150, padL = 40, padB = 20, padT = 10, padR = 10;
+  const max = Math.max(...dati.map(d => d.costoGiorno), 0.01);
+  const min = 0;
+  const stepX = (w - padL - padR) / (dati.length - 1);
+  const x = i => padL + i * stepX;
+  const y = v => padT + (1 - (v - min) / (max - min || 1)) * (h - padT - padB);
+  const points = dati.map((d, i) => x(i) + ',' + y(d.costoGiorno)).join(' ');
+  const areaPts = padL + ',' + (h - padB) + ' ' + points + ' ' + x(dati.length - 1) + ',' + (h - padB);
+  const circles = dati.map((d, i) => '<circle cx="' + x(i) + '" cy="' + y(d.costoGiorno) + '" r="2.6" fill="#23302b"><title>' + d.data + ': ' + fmt(d.costoGiorno) + '</title></circle>').join('');
+  const yLabels = [0, max / 2, max].map(v => '<text x="2" y="' + (y(v) + 4) + '" font-size="9" fill="#8a908b">' + v.toFixed(1) + '</text>').join('');
+  const firstLbl = dati[0].data.slice(5), lastLbl = dati[dati.length - 1].data.slice(5);
+  box.innerHTML =
+    '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">' +
+    '<line x1="' + padL + '" y1="' + (h - padB) + '" x2="' + (w - padR) + '" y2="' + (h - padB) + '" stroke="#e5e5df"/>' +
+    yLabels +
+    '<polygon points="' + areaPts + '" fill="#6f8c7a" fill-opacity="0.12"/>' +
+    '<polyline points="' + points + '" fill="none" stroke="#23302b" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
+    circles +
+    '<text x="' + padL + '" y="' + (h - 4) + '" font-size="9" fill="#8a908b">' + firstLbl + '</text>' +
+    '<text x="' + (w - padR - 24) + '" y="' + (h - 4) + '" font-size="9" fill="#8a908b">' + lastLbl + '</text>' +
+    '</svg>';
+}
+
+function renderReport() {
+  const periodo = document.getElementById('reportPeriodo').value;
+  const box = document.getElementById('reportBox');
+  const now = new Date();
+  const dati = storicoProfiloCorrente().filter(d => {
+    if (periodo === 'tutto') return true;
+    const dd = new Date(d.data);
+    if (periodo === 'anno') return dd.getFullYear() === now.getFullYear();
+    return dd.getFullYear() === now.getFullYear() && dd.getMonth() === now.getMonth();
+  });
+  if (!dati.length) { box.innerHTML = '<p class="status-line">Nessuna registrazione per questo periodo.</p>'; return; }
+
+  const totKm = dati.reduce((s, d) => s + (d.km || 0), 0);
+  const totCosto = dati.reduce((s, d) => s + (d.costoGiorno || 0), 0);
+  const totCo2 = dati.reduce((s, d) => s + (d.co2Kg || 0), 0);
+  const perPersona = {};
+  dati.forEach(d => Object.entries(d.quote || {}).forEach(([id, q]) => {
+    perPersona[id] = perPersona[id] || { nome: q.nome, totale: 0 };
+    perPersona[id].totale += q.importo || 0;
+  }));
+
+  let html = '<div class="info-row" style="border-top:none;padding-top:0;">' +
+    '<span>Giorni registrati <b>' + dati.length + '</b></span>' +
+    '<span>Km totali <b>' + totKm.toFixed(0) + '</b></span>' +
+    '<span>Costo totale <b>' + fmt(totCosto) + '</b></span>' +
+    '<span>CO2 risparmiata <b>' + fmtKg(totCo2) + '</b></span>' +
+    '</div><table class="history-table"><tr><th>Persona</th><th>Totale periodo</th></tr>';
+  Object.values(perPersona).forEach(pp => { html += '<tr><td>' + escapeHtml(pp.nome) + '</td><td>' + fmt(pp.totale) + '</td></tr>'; });
+  html += '</table>';
+  box.innerHTML = html;
+}
+
+function esportaStorico() {
+  const dati = storicoProfiloCorrente();
+  download('storico-' + (profiloCorrente().nome || 'tragitto') + '.json', JSON.stringify(dati, null, 2));
+}
+function pulisciStorico() {
+  if (!confirm('Eliminare tutto lo storico registrato per questo tragitto? L\'operazione non è reversibile.')) return;
+  history = history.filter(h => h.tragittoId !== store.activeId);
+  salvaStorico();
+  renderStorico();
+}
+
+/* ============================================================
+   Stampa / esportazione nota spese
+   ============================================================ */
+function stampaNotaSpese() {
+  const p = profiloCorrente();
+  const r = calcolaCosti(p);
+  const dati = storicoProfiloCorrente();
+  let righeStorico = '';
+  dati.slice(-20).forEach(d => {
+    righeStorico += '<tr><td>' + d.data + '</td><td>' + fmt(d.costoGiorno) + '</td><td>' + d.km.toFixed(1) + ' km</td></tr>';
+  });
+  const box = document.getElementById('printArea');
+  box.innerHTML =
+    '<h1>Nota spese — ' + escapeHtml(p.nome) + '</h1>' +
+    '<p>Generata il ' + fmtDate(Date.now()) + '</p>' +
+    '<h3>Riepilogo</h3>' +
+    '<table><tr><th>Costo/giorno</th><td>' + fmt(r.costoGiorno) + '</td></tr>' +
+    '<tr><th>Costo/settimana</th><td>' + fmt(r.costoSettimana) + '</td></tr>' +
+    '<tr><th>CO2 risparmiata/settimana</th><td>' + fmtKg(r.co2SettimanaKg) + '</td></tr></table>' +
+    '<h3>Quote per persona</h3><table><tr><th>Persona</th><th>Quota/giorno</th><th>Quota/settimana</th></tr>' +
+    r.quote.map(q => '<tr><td>' + escapeHtml(q.persona.nome) + '</td><td>' + fmt(q.giorno) + '</td><td>' + fmt(q.settimana) + '</td></tr>').join('') +
+    '</table>' +
+    (righeStorico ? '<h3>Storico recente</h3><table><tr><th>Data</th><th>Costo</th><th>Km</th></tr>' + righeStorico + '</table>' : '');
+  window.print();
+}
+
+/* ============================================================
+   Import / Export .json
+   ============================================================ */
+function esportaTragittoCorrente() {
+  const p = profiloCorrente();
+  download((p.nome || 'tragitto') + '.json', JSON.stringify({ schemaVersion: SCHEMA_VERSION, profile: p }, null, 2));
+}
+function esportaTuttiTragitti() {
+  download('tragitti-tutti.json', JSON.stringify({ schemaVersion: SCHEMA_VERSION, profiles: Object.values(store.profiles), exportedAt: Date.now() }, null, 2));
+}
+function importaFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const statusEl = document.getElementById('importStatus');
+    try {
+      const dati = JSON.parse(reader.result);
+      let importati = [];
+      if (dati && Array.isArray(dati.profiles)) {
+        importati = dati.profiles.map(pr => ({ ...pr, id: uid() }));
+      } else if (dati && dati.profile) {
+        importati = [{ ...dati.profile, id: uid() }];
+      } else if (dati && typeof dati.quota !== 'undefined') {
+        importati = [migraProfiloLegacy(dati)];
+      } else {
+        throw new Error('Formato file non riconosciuto.');
+      }
+      importati.forEach(pr => { store.profiles[pr.id] = pr; });
+      store.activeId = importati[0].id;
+      salvaStore();
+      renderAll();
+      statusEl.className = 'status-line ok';
+      statusEl.textContent = 'Importati ' + importati.length + ' tragitto/i con successo.';
+    } catch (err) {
+      statusEl.className = 'status-line error';
+      statusEl.textContent = 'File non valido: ' + (err.message || err);
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ============================================================
+   Wiring iniziale
+   ============================================================ */
+function bindaCampoSemplice(id, getter, setter) {
+  document.getElementById(id).addEventListener('input', (e) => {
+    setter(profiloCorrente(), e.target.value);
+    scheduleSave();
+    recalcola();
+  });
+}
+
+function initEventi() {
+  document.getElementById('vTipo').addEventListener('change', e => {
+    profiloCorrente().veicolo.tipo = e.target.value;
+    aggiornaEtichetteVeicolo();
+    scheduleSave();
+    recalcola();
+    renderMimitStatus();
+  });
+  bindaCampoSemplice('vConsumo', null, (p, v) => p.veicolo.consumo = parseFloat(v) || 0);
+  document.getElementById('vPrezzo').addEventListener('input', e => {
+    const p = profiloCorrente();
+    p.veicolo.prezzo = parseFloat(e.target.value) || 0;
+    p.veicolo.prezzoManuale = true;
+    scheduleSave();
+    recalcola();
+    renderMimitStatus();
+  });
+  bindaCampoSemplice('vConsumoInattivita', null, (p, v) => p.veicolo.consumoInattivita = parseFloat(v) || 0);
+  document.getElementById('mimitRefreshBtn').addEventListener('click', () => {
+    profiloCorrente().veicolo.prezzoManuale = false;
+    aggiornaPrezzoMimit(false);
+  });
+
+  document.getElementById('routeMode').addEventListener('change', e => {
+    profiloCorrente().routeMode = e.target.value;
+    aggiornaVisibilitaRouteMode();
+    scheduleSave();
+    recalcola();
+  });
+  bindaCampoSemplice('andDistanza', null, (p, v) => p.andata.distanza = parseFloat(v) || 0);
+  document.getElementById('andPartenza').addEventListener('input', e => { profiloCorrente().andata.partenza = e.target.value; scheduleSave(); });
+  document.getElementById('andArrivo').addEventListener('input', e => { profiloCorrente().andata.arrivo = e.target.value; scheduleSave(); });
+  document.getElementById('andSwapBtn').addEventListener('click', () => {
+    const p = profiloCorrente();
+    const tmp = p.andata.partenza; p.andata.partenza = p.andata.arrivo; p.andata.arrivo = tmp;
+    document.getElementById('andPartenza').value = p.andata.partenza;
+    document.getElementById('andArrivo').value = p.andata.arrivo;
+    scheduleSave();
+  });
+  document.getElementById('andAddTappaBtn').addEventListener('click', () => { profiloCorrente().andata.tappe.push(''); renderTappe('and'); scheduleSave(); });
+
+  bindaCampoSemplice('retDistanza', null, (p, v) => p.ritorno.distanza = parseFloat(v) || 0);
+  document.getElementById('retPartenza').addEventListener('input', e => { profiloCorrente().ritorno.partenza = e.target.value; scheduleSave(); });
+  document.getElementById('retArrivo').addEventListener('input', e => { profiloCorrente().ritorno.arrivo = e.target.value; scheduleSave(); });
+  document.getElementById('retSwapBtn').addEventListener('click', () => {
+    const p = profiloCorrente();
+    const tmp = p.ritorno.partenza; p.ritorno.partenza = p.ritorno.arrivo; p.ritorno.arrivo = tmp;
+    document.getElementById('retPartenza').value = p.ritorno.partenza;
+    document.getElementById('retArrivo').value = p.ritorno.arrivo;
+    scheduleSave();
+  });
+  document.getElementById('retAddTappaBtn').addEventListener('click', () => { profiloCorrente().ritorno.tappe.push(''); renderTappe('ret'); scheduleSave(); });
+
+  setupRoutingBlock('and');
+  setupRoutingBlock('ret');
+  setupGeoButton('and');
+  setupGeoButton('ret');
+
+  document.getElementById('giorni').addEventListener('input', e => {
+    profiloCorrente().giorniSettimana = parseFloat(e.target.value) || 0;
+    scheduleSave();
+    recalcola();
+  });
+  ['conM', 'senzaM', 'conS', 'senzaS'].forEach(id => {
+    document.getElementById(id).addEventListener('input', e => {
+      profiloCorrente().traffico[id] = parseFloat(e.target.value) || 0;
+      scheduleSave();
+      recalcola();
+    });
+  });
+
+  document.getElementById('divisioneMode').addEventListener('change', e => {
+    profiloCorrente().divisione = e.target.value;
+    renderPersoneList();
+    scheduleSave();
+    recalcola();
+  });
+  document.getElementById('addPersonaBtn').addEventListener('click', aggiungiPersona);
+  document.getElementById('addSpesaBtn').addEventListener('click', aggiungiSpesa);
+
+  document.getElementById('addSaldoBtn').addEventListener('click', () => {
+    const p = profiloCorrente();
+    const importo = parseFloat(document.getElementById('saldoImporto').value) || 0;
+    if (importo <= 0) { alert('Inserisci un importo maggiore di zero.'); return; }
+    p.saldo.push({
+      id: uid(),
+      personaId: document.getElementById('saldoPersona').value,
+      importo,
+      descrizione: document.getElementById('saldoDescrizione').value.trim(),
+      data: document.getElementById('saldoData').value || todayISO()
+    });
+    document.getElementById('saldoImporto').value = '';
+    document.getElementById('saldoDescrizione').value = '';
+    renderSaldoList();
+    scheduleSave();
+  });
+
+  document.getElementById('giorniAttiviEnable').addEventListener('change', e => {
+    profiloCorrente().giorniAttivi.enabled = e.target.checked;
+    aggiornaVisibilitaGiorni();
+    scheduleSave();
+    recalcola();
+  });
+  document.querySelectorAll('#dayToggleGrid button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const p = profiloCorrente();
+      const d = btn.dataset.day;
+      p.giorniAttivi[d] = !p.giorniAttivi[d];
+      renderDayToggle();
+      aggiornaVisibilitaGiorni();
+      scheduleSave();
+      recalcola();
+    });
+  });
+
+  document.getElementById('tpAbilita').addEventListener('change', e => { profiloCorrente().trasportoPubblico.abilitato = e.target.checked; scheduleSave(); recalcola(); });
+  document.getElementById('tpCosto').addEventListener('input', e => { profiloCorrente().trasportoPubblico.costoMensile = parseFloat(e.target.value) || 0; scheduleSave(); recalcola(); });
+  document.getElementById('tpPersona').addEventListener('change', e => { profiloCorrente().trasportoPubblico.personaId = e.target.value; scheduleSave(); recalcola(); });
+
+  document.getElementById('profiloSelect').addEventListener('change', e => cambiaProfiloAttivo(e.target.value));
+  document.getElementById('profNewBtn').addEventListener('click', nuovoProfiloUI);
+  document.getElementById('profDupBtn').addEventListener('click', duplicaProfiloUI);
+  document.getElementById('profDelBtn').addEventListener('click', () => eliminaProfilo(store.activeId));
+
+  document.getElementById('registraOggiBtn').addEventListener('click', registraOggi);
+  document.getElementById('stampaBtn').addEventListener('click', stampaNotaSpese);
+  document.getElementById('reportPeriodo').addEventListener('change', renderReport);
+  document.getElementById('esportaStoricoBtn').addEventListener('click', esportaStorico);
+  document.getElementById('pulisciStoricoBtn').addEventListener('click', pulisciStorico);
+
+  document.getElementById('exportCurrentBtn').addEventListener('click', esportaTragittoCorrente);
+  document.getElementById('exportAllBtn').addEventListener('click', esportaTuttiTragitti);
+  document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importInput').click());
+  document.getElementById('importInput').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) importaFile(file);
+    e.target.value = '';
+  });
+}
+
+/* ============================================================
+   Avvio
+   ============================================================ */
+function init() {
+  store = caricaStore();
+  history = caricaStorico();
+  salvaStore(); // garantisce che un profilo creato di default sia persistito subito, anche senza modifiche
+  initTabs();
+  initEventi();
+  renderAll();
+  aggiornaPrezzoMimit(true);
+}
+init();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch((err) => {
+      console.log('Registrazione service worker non riuscita:', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
