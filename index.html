@@ -259,9 +259,13 @@
     font-size: 11.5px;
     color: var(--text-3);
     margin-top: 28px;
-    line-height: 1.55;
+    line-height: 1.6;
     padding: 0 4px;
   }
+  footer strong { color: var(--text-2); font-weight: 650; }
+  .privacy-list { font-size: 12.5px; color: var(--text-2); margin: 10px 0 0; padding-left: 18px; line-height: 1.5; }
+  .privacy-list li { margin-bottom: 5px; }
+  .privacy-list b { color: var(--ink); font-weight: 600; }
 
   /* --- Profile bar --- */
   .profile-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; flex-wrap: nowrap; }
@@ -296,6 +300,10 @@
   .tab-btn:hover:not(.active) { background: transparent; color: var(--text-2); border-bottom-color: transparent; }
   .tab-btn.active { color: var(--ink); background: transparent; border-bottom-color: var(--ink); }
   .tab-btn.active:hover { background: transparent; color: var(--ink); border-bottom-color: var(--ink); }
+  .tab-settings { margin-left: auto; }
+  @media (max-width: 560px) {
+    .tab-settings-label { display: none; }
+  }
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
 
@@ -433,7 +441,10 @@
     <button type="button" class="tab-btn" data-tab="persone">Persone</button>
     <button type="button" class="tab-btn" data-tab="storico">Storico</button>
     <button type="button" class="tab-btn" data-tab="extra">Extra</button>
-    <button type="button" class="tab-btn" data-tab="impostazioni">Impostazioni</button>
+    <button type="button" class="tab-btn tab-settings" data-tab="impostazioni" title="Impostazioni" aria-label="Impostazioni">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09A1.65 1.65 0 0 0 9 4.6V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09c.2.63.77 1.05 1.42 1.05H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span class="tab-settings-label">Impostazioni</span>
+    </button>
   </nav>
 
   <!-- ===================== TAB: TRAGITTO ===================== -->
@@ -704,7 +715,7 @@
 
     <div class="card">
       <h2 class="card-title">Backup e condivisione (.json)</h2>
-      <p class="section-hint">Il salvataggio automatico avviene già in locale sul dispositivo. Usa l'export/import per fare un backup o condividere un tragitto con un'altra persona.</p>
+      <p class="section-hint">Il salvataggio automatico avviene già in locale sul dispositivo. Usa l'export/import per fare un backup o condividere un tragitto con un'altra persona. Puoi reimportare sia i file dei tragitti sia quelli dello storico spese esportati dall'app.</p>
       <div class="action-row">
         <button type="button" class="secondary" id="exportCurrentBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Esporta tragitto corrente</button>
         <button type="button" class="secondary" id="exportAllBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Esporta tutti i tragitti</button>
@@ -715,9 +726,25 @@
       </div>
       <p class="status-line" id="importStatus"></p>
     </div>
+
+    <div class="card">
+      <h2 class="card-title">Privacy e dati</h2>
+      <p class="section-hint">Fare Share non usa cookie di tracciamento, non ha pubblicità e non richiede alcun account. Tutti i tuoi tragitti, lo storico e i saldi restano salvati soltanto su questo dispositivo (nel localStorage del browser): non vengono inviati ad alcun server.</p>
+      <p class="section-hint">Alcune funzioni si appoggiano però a servizi esterni gratuiti, a cui viene inviato solo il minimo indispensabile (es. l'indirizzo o le coordinate da cercare):</p>
+      <ul class="privacy-list">
+        <li><b>OpenStreetMap / Nominatim</b> — ricerca degli indirizzi e geolocalizzazione inversa</li>
+        <li><b>OSRM</b> — calcolo del percorso e della distanza</li>
+        <li><b>Osservatorio prezzi MIMIT</b> — prezzo medio del carburante (facoltativo)</li>
+      </ul>
+      <p class="section-hint">Nessuno di questi richiede registrazione o chiavi. Per cancellare i dati salvati puoi eliminare i singoli tragitti, pulire lo storico dalla scheda "Storico", oppure svuotare i dati del sito dalle impostazioni del browser.</p>
+    </div>
   </section>
 
-  <footer>Geocodifica indirizzi via Nominatim e calcolo percorso via OSRM, prezzo carburante via Osservatorio Prezzi Carburanti MIMIT (dati OpenStreetMap/MIMIT, gratuiti, nessuna chiave richiesta). Usali con moderazione. I tragitti vengono salvati automaticamente sul dispositivo (localStorage); usa l'export .json per un backup o per condividerli.</footer>
+  <footer>
+    <strong>Fare Share</strong> — a ognuno la sua giusta parte.<br>
+    Mappe e indirizzi © OpenStreetMap · percorsi OSRM · prezzi Osservatorio MIMIT (usa i servizi con moderazione).<br>
+    I tuoi dati restano su questo dispositivo — dettagli in Impostazioni › Privacy e dati.
+  </footer>
 </div>
 
 <div id="printArea"></div>
@@ -1863,6 +1890,32 @@ function importaFile(file) {
     const statusEl = document.getElementById('importStatus');
     try {
       const dati = JSON.parse(reader.result);
+
+      // --- File di storico spese (array di registrazioni, o { storico: [...] }) ---
+      if (Array.isArray(dati) || (dati && Array.isArray(dati.storico))) {
+        const arr = Array.isArray(dati) ? dati : dati.storico;
+        const punti = arr.filter(x => x && typeof x === 'object' && 'data' in x && 'costoGiorno' in x);
+        if (!punti.length) throw new Error('Formato file non riconosciuto.');
+        const esistenti = new Set(history.map(h => h.id));
+        let aggiunti = 0;
+        punti.forEach(pt => {
+          const rec = { ...pt, id: pt.id || uid() };
+          if (esistenti.has(rec.id)) return;
+          esistenti.add(rec.id);
+          history.push(rec);
+          aggiunti++;
+        });
+        history.sort((a, b) => (a.data < b.data ? -1 : a.data > b.data ? 1 : 0));
+        salvaStorico();
+        renderAll();
+        const gia = punti.length - aggiunti;
+        statusEl.className = 'status-line ok';
+        statusEl.textContent = 'Importate ' + aggiunti + ' registrazioni nello storico'
+          + (gia ? ' (' + gia + ' già presenti, ignorate)' : '') + '.';
+        return;
+      }
+
+      // --- File di tragitti ---
       let importati = [];
       if (dati && Array.isArray(dati.profiles)) {
         importati = dati.profiles.map(pr => ({ ...pr, id: uid() }));

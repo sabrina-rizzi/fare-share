@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fare-share-v6';
+const CACHE_NAME = 'fare-share-v7';
 
 // App shell (stesso dominio) + librerie esterne che non cambiano spesso:
 // cacheate cache-first così l'app e la mappa restano utilizzabili offline
