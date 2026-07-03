@@ -251,9 +251,89 @@
   .geo-status.ok { color: var(--ok-text); }
   .addr-row { display: flex; align-items: center; gap: 8px; }
   .addr-row input { flex: 1; }
+  .addr-row .ac-wrap { flex: 1; min-width: 0; }
   .swap-row { display: flex; justify-content: center; margin: 6px 0; }
   .swap-row button { width: auto; padding: 0 14px; height: 32px; font-size: 12.5px; }
   .tappe-list { display: flex; flex-direction: column; gap: 8px; margin: 8px 0; }
+
+  /* --- Autocomplete indirizzi --- */
+  .ac-wrap { position: relative; }
+  .ac-wrap input { width: 100%; }
+  .ac-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+    max-height: 280px;
+    overflow-y: auto;
+    z-index: 60;
+    display: none;
+  }
+  .ac-list.open { display: block; }
+  .ac-item { padding: 9px 12px; cursor: pointer; border-bottom: 1px solid var(--line); }
+  .ac-item:last-child { border-bottom: none; }
+  .ac-item:hover, .ac-item.active { background: var(--sage-bg-2); }
+  .ac-item .ac-title { font-weight: 600; font-size: 13.5px; color: var(--ink); }
+  .ac-item .ac-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--sage-strong);
+    background: var(--sage-bg);
+    padding: 1px 7px;
+    border-radius: 20px;
+    margin-left: 7px;
+    vertical-align: 1px;
+  }
+  .ac-item .ac-sub { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+  .ac-empty { padding: 10px 12px; font-size: 12.5px; color: var(--text-3); }
+
+  /* --- Selettore posizione dalla mappa (overlay a schermo intero) --- */
+  .map-picker-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: var(--bg);
+    flex-direction: column;
+  }
+  .map-picker-overlay.open { display: flex; }
+  .map-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    font-weight: 650;
+    color: var(--ink);
+    flex: none;
+  }
+  .map-picker-header button { width: 38px; height: 38px; padding: 0; }
+  .map-picker-map-wrap { position: relative; flex: 1; min-height: 0; }
+  .map-picker-map { position: absolute; inset: 0; }
+  .map-picker-pin {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -100%);
+    pointer-events: none;
+    z-index: 1000;
+    filter: drop-shadow(0 3px 4px rgba(35,48,43,0.35));
+  }
+  .map-picker-footer {
+    flex: none;
+    padding: 12px 16px 16px;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+  }
+  .map-picker-footer .status-line { margin: 0 0 10px; min-height: 18px; }
   footer {
     text-align: center;
     font-size: 11.5px;
@@ -471,6 +551,42 @@
           <input type="number" id="vPrezzo" value="1.85" min="0" step="0.01">
         </div>
       </div>
+      <div class="field">
+        <button type="button" class="ghost" id="consumoAssistBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9M4 5v0M12 21v-6M12 11V3M20 21v-3M20 14V3"/><circle cx="4" cy="7" r="2"/><circle cx="12" cy="8" r="2"/><circle cx="20" cy="17" r="2"/></svg>Non conosci il consumo esatto? Stima per categoria</button>
+        <div id="consumoAssistBox" style="display:none; margin-top: 10px;">
+          <div class="grid3">
+            <div class="field">
+              <label for="caCategoria" class="mini-label">Categoria veicolo</label>
+              <select id="caCategoria">
+                <option value="city">City car / utilitaria</option>
+                <option value="berlina">Berlina / media</option>
+                <option value="suv">SUV / crossover</option>
+                <option value="wagon">Station wagon</option>
+                <option value="van">Monovolume / van</option>
+                <option value="sportiva">Sportiva</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="caStile" class="mini-label">Stile di guida</label>
+              <select id="caStile">
+                <option value="tranquillo">Tranquillo</option>
+                <option value="normale" selected>Normale</option>
+                <option value="aggressivo">Sostenuto</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="caPercorso" class="mini-label">Percorso prevalente</label>
+              <select id="caPercorso">
+                <option value="urbano">Urbano (code)</option>
+                <option value="misto" selected>Misto</option>
+                <option value="extraurbano">Extraurbano</option>
+              </select>
+            </div>
+          </div>
+          <p class="section-hint" id="consumoAssistRisultato">-</p>
+          <button type="button" class="secondary" id="consumoAssistApplyBtn">Usa questo valore</button>
+        </div>
+      </div>
       <div class="field" id="mimitBox">
         <label for="vProvincia" class="mini-label">Zona di riferimento per il prezzo</label>
         <select id="vProvincia">
@@ -505,8 +621,9 @@
       <div class="field">
         <p class="mini-label">Indirizzo di partenza</p>
         <div class="addr-row">
-          <input type="text" id="andPartenza" placeholder="Via Roma 1, Milano">
+          <input type="text" id="andPartenza" placeholder="Via Roma 1, Milano, oppure un bar, un negozio...">
           <button type="button" class="secondary small" id="andGeoBtn" title="Usa la mia posizione attuale"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
+          <button type="button" class="secondary small" id="andPartenzaMapBtn" title="Scegli dalla mappa"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z"/><path d="M9 7v13M15 4v13"/></svg></button>
         </div>
       </div>
       <div class="swap-row">
@@ -514,7 +631,10 @@
       </div>
       <div class="field">
         <p class="mini-label">Indirizzo di arrivo</p>
-        <input type="text" id="andArrivo" placeholder="Corso Italia 20, Milano">
+        <div class="addr-row">
+          <input type="text" id="andArrivo" placeholder="Corso Italia 20, Milano, oppure un bar, un negozio...">
+          <button type="button" class="secondary small" id="andArrivoMapBtn" title="Scegli dalla mappa"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z"/><path d="M9 7v13M15 4v13"/></svg></button>
+        </div>
       </div>
       <p class="mini-label" style="margin-top: 8px;">Tappe intermedie (opzionale)</p>
       <div class="tappe-list" id="andTappeContainer"></div>
@@ -533,8 +653,9 @@
         <div class="field">
           <p class="mini-label">Indirizzo di partenza (ritorno)</p>
           <div class="addr-row">
-            <input type="text" id="retPartenza" placeholder="Corso Italia 20, Milano">
+            <input type="text" id="retPartenza" placeholder="Corso Italia 20, Milano, oppure un bar, un negozio...">
             <button type="button" class="secondary small" id="retGeoBtn" title="Usa la mia posizione attuale"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.4 7-11a7 7 0 1 0-14 0c0 4.6 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
+            <button type="button" class="secondary small" id="retPartenzaMapBtn" title="Scegli dalla mappa"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z"/><path d="M9 7v13M15 4v13"/></svg></button>
           </div>
         </div>
         <div class="swap-row">
@@ -542,7 +663,10 @@
         </div>
         <div class="field">
           <p class="mini-label">Indirizzo di arrivo (ritorno)</p>
-          <input type="text" id="retArrivo" placeholder="Via Roma 1, Milano">
+          <div class="addr-row">
+            <input type="text" id="retArrivo" placeholder="Via Roma 1, Milano, oppure un bar, un negozio...">
+            <button type="button" class="secondary small" id="retArrivoMapBtn" title="Scegli dalla mappa"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z"/><path d="M9 7v13M15 4v13"/></svg></button>
+          </div>
         </div>
         <p class="mini-label" style="margin-top: 8px;">Tappe intermedie (opzionale)</p>
         <div class="tappe-list" id="retTappeContainer"></div>
@@ -736,7 +860,7 @@
       <p class="section-hint">Fare Share non usa cookie di tracciamento, non ha pubblicità e non richiede alcun account. Tutti i tuoi tragitti, lo storico e i saldi restano salvati soltanto su questo dispositivo (nel localStorage del browser): non vengono inviati ad alcun server.</p>
       <p class="section-hint">Alcune funzioni si appoggiano però a servizi esterni gratuiti, a cui viene inviato solo il minimo indispensabile (es. l'indirizzo o le coordinate da cercare):</p>
       <ul class="privacy-list">
-        <li><b>OpenStreetMap / Nominatim</b> — ricerca degli indirizzi e geolocalizzazione inversa</li>
+        <li><b>OpenStreetMap / Nominatim</b> — ricerca e suggerimenti degli indirizzi (mentre scrivi), geolocalizzazione inversa e selezione di un punto dalla mappa</li>
         <li><b>OSRM</b> — calcolo del percorso e della distanza</li>
         <li><b>Osservatorio prezzi MIMIT</b> — prezzo medio nazionale o per provincia del carburante (facoltativo). Le medie sono calcolate una volta al giorno lato server: la scelta della tua zona resta solo su questo dispositivo, non viene inviata da nessuna parte</li>
       </ul>
@@ -752,6 +876,26 @@
 </div>
 
 <div id="printArea"></div>
+
+<div class="map-picker-overlay" id="mapPickerOverlay">
+  <div class="map-picker-header">
+    <span>Scegli un punto sulla mappa</span>
+    <button type="button" class="secondary" id="mapPickerCloseBtn" aria-label="Chiudi">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="map-picker-map-wrap">
+    <div class="map-picker-map" id="mapPickerMap"></div>
+    <svg class="map-picker-pin" width="34" height="44" viewBox="0 0 34 44" xmlns="http://www.w3.org/2000/svg">
+      <path d="M17 43C17 43 31 27.6 31 16.5C31 8.5 24.9 2 17 2C9.1 2 3 8.5 3 16.5C3 27.6 17 43 17 43Z" fill="#23302b"/>
+      <circle cx="17" cy="16.5" r="6" fill="#f4f4f1"/>
+    </svg>
+  </div>
+  <div class="map-picker-footer">
+    <p class="status-line" id="mapPickerStatus">Sposta la mappa per posizionare il pin sul punto desiderato.</p>
+    <button type="button" id="mapPickerConfirmBtn">Usa questa posizione</button>
+  </div>
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -999,6 +1143,73 @@ function aggiornaEtichetteVeicolo() {
   document.getElementById('vPrezzoLabel').textContent = prezzoLbl;
   document.getElementById('vConsumoInattivitaLabel').textContent = inattivitaLbl;
   document.getElementById('mimitBox').style.display = tipo === 'elettrico' ? 'none' : 'block';
+  aggiornaAnteprimaConsumoAssist();
+}
+
+/* ============================================================
+   Assistente consumo per categoria + stile di guida
+   Non esiste una fonte gratuita affidabile di consumi reali per modello
+   di auto (richiederebbe dati automotive a pagamento): questo è un
+   calcolo indicativo per categoria di veicolo, sempre dichiarato come
+   stima e sempre sovrascrivibile inserendo un valore a mano.
+   ============================================================ */
+// Consumo medio indicativo (ciclo misto realistico) per categoria e alimentazione.
+// benzina/diesel/metano: km per unità di carburante (km/l o km/kg) — più alto è meglio.
+// elettrico: kWh/100km — più basso è meglio.
+const CONSUMO_BASELINE = {
+  benzina:   { city: 16.5, berlina: 14,   suv: 11.5, wagon: 13,   van: 10.5, sportiva: 9  },
+  diesel:    { city: 20,   berlina: 17.5, suv: 14.5, wagon: 16.5, van: 13,   sportiva: 11 },
+  metano:    { city: 15,   berlina: 13,   suv: 10.5, wagon: 12,   van: 9.5,  sportiva: 8  },
+  elettrico: { city: 13,   berlina: 16,   suv: 19,   wagon: 17,   van: 20,   sportiva: 21 }
+};
+const STILE_FATTORE = { tranquillo: 0.88, normale: 1.0, aggressivo: 1.20 };
+const PERCORSO_FATTORE = { urbano: 1.18, misto: 1.0, extraurbano: 0.90 };
+
+function calcolaConsumoStimato(tipo, categoria, stile, percorso) {
+  const tabella = CONSUMO_BASELINE[tipo] || CONSUMO_BASELINE.benzina;
+  const base = tabella[categoria];
+  const fattore = (STILE_FATTORE[stile] || 1) * (PERCORSO_FATTORE[percorso] || 1);
+  const val = tipo === 'elettrico' ? base * fattore : base / fattore;
+  return Math.round(val * 10) / 10;
+}
+function unitaConsumo(tipo) {
+  return tipo === 'elettrico' ? 'kWh/100km' : tipo === 'metano' ? 'km/kg' : 'km/l';
+}
+function aggiornaAnteprimaConsumoAssist() {
+  const risultatoEl = document.getElementById('consumoAssistRisultato');
+  const applyBtn = document.getElementById('consumoAssistApplyBtn');
+  if (!risultatoEl || !applyBtn) return;
+  const p = profiloCorrente();
+  const tipo = p.veicolo.tipo;
+  const categoria = document.getElementById('caCategoria').value;
+  const stile = document.getElementById('caStile').value;
+  const percorso = document.getElementById('caPercorso').value;
+  const val = calcolaConsumoStimato(tipo, categoria, stile, percorso);
+  const unita = unitaConsumo(tipo);
+  risultatoEl.innerHTML = 'Consumo stimato: <b>' + val.toString().replace('.', ',') + ' ' + unita +
+    '</b>. Stima indicativa basata su medie di categoria, non sul modello esatto della tua auto.';
+  applyBtn.dataset.valore = val;
+}
+function setupConsumoAssist() {
+  const toggleBtn = document.getElementById('consumoAssistBtn');
+  const box = document.getElementById('consumoAssistBox');
+  toggleBtn.addEventListener('click', () => {
+    const apertura = box.style.display === 'none';
+    box.style.display = apertura ? 'block' : 'none';
+    if (apertura) aggiornaAnteprimaConsumoAssist();
+  });
+  ['caCategoria', 'caStile', 'caPercorso'].forEach(id => {
+    document.getElementById(id).addEventListener('change', aggiornaAnteprimaConsumoAssist);
+  });
+  document.getElementById('consumoAssistApplyBtn').addEventListener('click', () => {
+    const val = parseFloat(document.getElementById('consumoAssistApplyBtn').dataset.valore);
+    if (!isFinite(val)) return;
+    const p = profiloCorrente();
+    p.veicolo.consumo = val;
+    document.getElementById('vConsumo').value = val;
+    scheduleSave();
+    recalcola();
+  });
 }
 
 /* ============================================================
@@ -1104,13 +1315,27 @@ function renderTappe(prefix) {
     const row = document.createElement('div');
     row.className = 'addr-row';
     row.innerHTML =
-      '<input type="text" class="tappa-input" data-idx="' + idx + '" placeholder="Indirizzo tappa intermedia" value="' + escapeHtml(val) + '">' +
+      '<input type="text" class="tappa-input" data-idx="' + idx + '" placeholder="Indirizzo tappa intermedia, oppure un bar, un negozio..." value="' + escapeHtml(val) + '">' +
+      '<button type="button" class="secondary small tappa-map-btn" data-idx="' + idx + '" title="Scegli dalla mappa" aria-label="Scegli dalla mappa"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z"/><path d="M9 7v13M15 4v13"/></svg></button>' +
       '<button type="button" class="secondary small remove-tappa" data-idx="' + idx + '" aria-label="Rimuovi tappa">&times;</button>';
     box.appendChild(row);
   });
-  box.querySelectorAll('.tappa-input').forEach(inp => inp.addEventListener('input', () => {
-    list[parseInt(inp.dataset.idx, 10)] = inp.value;
-    scheduleSave();
+  box.querySelectorAll('.tappa-input').forEach(inp => {
+    attachAutocomplete(inp);
+    inp.addEventListener('input', () => {
+      list[parseInt(inp.dataset.idx, 10)] = inp.value;
+      scheduleSave();
+    });
+  });
+  box.querySelectorAll('.tappa-map-btn').forEach(btn => btn.addEventListener('click', () => {
+    const idx = parseInt(btn.dataset.idx, 10);
+    const inp = box.querySelector('.tappa-input[data-idx="' + idx + '"]');
+    apriSelettoreMappa((indirizzo, coord) => {
+      inp.value = indirizzo;
+      list[idx] = indirizzo;
+      puntoNotoCache.set(indirizzo, coord);
+      scheduleSave();
+    }, coordDaTesto(inp.value));
   }));
   box.querySelectorAll('.remove-tappa').forEach(btn => btn.addEventListener('click', () => {
     list.splice(parseInt(btn.dataset.idx, 10), 1);
@@ -1506,6 +1731,17 @@ function renderTpRisultato(r, p) {
    ============================================================ */
 const mapState = { and: { map: null, layer: null }, ret: { map: null, layer: null } };
 
+// Testo indirizzo esatto -> {lat, lon} di un punto scelto con certezza (da un
+// suggerimento dell'autocomplete, dal selettore mappa o dalla geolocalizzazione).
+// Se l'utente ricalcola la distanza senza aver toccato il testo, si riusa questo
+// punto invece di ripetere una ricerca testuale che potrebbe restituire un
+// risultato diverso (es. per nomi ambigui come "Bar Centrale").
+const puntoNotoCache = new Map();
+function coordDaTesto(testo) {
+  const c = puntoNotoCache.get((testo || '').trim());
+  return c ? [c.lat, c.lon] : null;
+}
+
 async function geocode(indirizzo) {
   const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(indirizzo);
   const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
@@ -1532,6 +1768,195 @@ async function calcolaPercorsoMultiplo(punti) {
   return data.routes[0];
 }
 
+/* ============================================================
+   Autocomplete indirizzi (Nominatim) — riconosce anche i luoghi
+   pubblici (bar, farmacie, negozi, aziende...) quando sono presenti
+   su OpenStreetMap con un nome proprio.
+   ============================================================ */
+const OSM_CATEGORIE = {
+  pharmacy: 'Farmacia', supermarket: 'Supermercato', bar: 'Bar', cafe: 'Bar',
+  restaurant: 'Ristorante', fast_food: 'Fast food', bank: 'Banca', fuel: 'Distributore',
+  hospital: 'Ospedale', clinic: 'Ambulatorio', doctors: 'Medico', dentist: 'Dentista',
+  school: 'Scuola', university: 'Università', post_office: 'Poste',
+  company: 'Azienda', office: 'Ufficio', industrial: 'Zona industriale',
+  hotel: 'Hotel', parking: 'Parcheggio', gym: 'Palestra', bakery: 'Panetteria',
+  convenience: 'Minimarket', mall: 'Centro commerciale', place_of_worship: 'Luogo di culto',
+  station: 'Stazione', bus_station: 'Autostazione', townhall: 'Municipio'
+};
+function etichettaCategoriaOsm(item) {
+  return OSM_CATEGORIE[item.type] || OSM_CATEGORIE[item.class] || '';
+}
+function etichettaSuggerimento(item) {
+  const nomeProprio = item.namedetails && item.namedetails.name;
+  return nomeProprio || item.display_name.split(',')[0];
+}
+function testoIndirizzoSuggerimento(item) {
+  const a = item.address || {};
+  const localita = a.city || a.town || a.village || a.hamlet || '';
+  const nome = etichettaSuggerimento(item);
+  return localita && !nome.includes(localita) ? nome + ', ' + localita : nome;
+}
+
+async function cercaSuggerimenti(query, signal) {
+  const url = 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&namedetails=1&limit=6&accept-language=it&q=' + encodeURIComponent(query);
+  const res = await fetch(url, { headers: { 'Accept': 'application/json' }, signal });
+  if (!res.ok) throw new Error('Ricerca non riuscita');
+  return res.json();
+}
+
+function attachAutocomplete(input) {
+  if (input.dataset.acAttached) return;
+  input.dataset.acAttached = '1';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'ac-wrap';
+  input.parentNode.insertBefore(wrap, input);
+  wrap.appendChild(input);
+  const list = document.createElement('div');
+  list.className = 'ac-list';
+  wrap.appendChild(list);
+
+  let items = [];
+  let activeIdx = -1;
+  let controller = null;
+  let debounceTimer = null;
+
+  function chiudi() {
+    list.classList.remove('open');
+    list.innerHTML = '';
+    items = [];
+    activeIdx = -1;
+  }
+  function seleziona(item) {
+    const testo = testoIndirizzoSuggerimento(item);
+    input.value = testo;
+    puntoNotoCache.set(testo, { lat: parseFloat(item.lat), lon: parseFloat(item.lon) });
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    chiudi();
+  }
+  function render() {
+    if (!items.length) {
+      list.innerHTML = '<div class="ac-empty">Nessun risultato</div>';
+      list.classList.add('open');
+      return;
+    }
+    list.innerHTML = items.map((item, i) => {
+      const cat = etichettaCategoriaOsm(item);
+      return '<div class="ac-item' + (i === activeIdx ? ' active' : '') + '" data-idx="' + i + '">' +
+        '<div><span class="ac-title">' + escapeHtml(etichettaSuggerimento(item)) + '</span>' +
+        (cat ? '<span class="ac-badge">' + escapeHtml(cat) + '</span>' : '') + '</div>' +
+        '<div class="ac-sub">' + escapeHtml(item.display_name) + '</div>' +
+        '</div>';
+    }).join('');
+    list.classList.add('open');
+    list.querySelectorAll('.ac-item').forEach(el => {
+      el.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        seleziona(items[parseInt(el.dataset.idx, 10)]);
+      });
+    });
+  }
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim();
+    clearTimeout(debounceTimer);
+    if (controller) controller.abort();
+    if (q.length < 3) { chiudi(); return; }
+    debounceTimer = setTimeout(async () => {
+      controller = new AbortController();
+      try {
+        items = await cercaSuggerimenti(q, controller.signal);
+        activeIdx = -1;
+        render();
+      } catch (err) {
+        if (err.name !== 'AbortError') chiudi();
+      }
+    }, 450);
+  });
+  input.addEventListener('keydown', (e) => {
+    if (!list.classList.contains('open') || !items.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, items.length - 1); render(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); render(); }
+    else if (e.key === 'Enter') { if (activeIdx >= 0) { e.preventDefault(); seleziona(items[activeIdx]); } }
+    else if (e.key === 'Escape') { chiudi(); }
+  });
+  input.addEventListener('blur', () => setTimeout(chiudi, 150));
+}
+
+/* ============================================================
+   Selettore posizione dalla mappa — pin fisso al centro, l'utente
+   sposta la mappa sotto (comodo da mobile: non serve un tap preciso).
+   ============================================================ */
+let mapPickerMap = null;
+let mapPickerOnConfirm = null;
+let mapPickerCoord = null;
+let mapPickerDebounce = null;
+
+function apriSelettoreMappa(onConferma, centroIniziale) {
+  mapPickerOnConfirm = onConferma;
+  const overlay = document.getElementById('mapPickerOverlay');
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  if (!mapPickerMap) {
+    mapPickerMap = L.map('mapPickerMap', { zoomControl: true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Map data (C) OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(mapPickerMap);
+    mapPickerMap.on('moveend', aggiornaIndirizzoCentroMappa);
+  }
+  mapPickerMap.setView(centroIniziale || [41.9028, 12.4964], centroIniziale ? 16 : 5);
+  setTimeout(() => {
+    mapPickerMap.invalidateSize();
+    aggiornaIndirizzoCentroMappa();
+  }, 150);
+}
+function chiudiSelettoreMappa() {
+  document.getElementById('mapPickerOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  mapPickerOnConfirm = null;
+}
+function aggiornaIndirizzoCentroMappa() {
+  const statusEl = document.getElementById('mapPickerStatus');
+  const center = mapPickerMap.getCenter();
+  mapPickerCoord = { lat: center.lat, lon: center.lng };
+  statusEl.textContent = 'Ricerca indirizzo...';
+  statusEl.dataset.indirizzo = '';
+  clearTimeout(mapPickerDebounce);
+  mapPickerDebounce = setTimeout(async () => {
+    try {
+      const indirizzo = await reverseGeocode(center.lat, center.lng);
+      statusEl.textContent = indirizzo;
+      statusEl.dataset.indirizzo = indirizzo;
+    } catch (err) {
+      statusEl.textContent = 'Nessun indirizzo trovato per questo punto (' + center.lat.toFixed(5) + ', ' + center.lng.toFixed(5) + '). Puoi confermare comunque.';
+    }
+  }, 500);
+}
+function setupMapPicker() {
+  document.getElementById('mapPickerCloseBtn').addEventListener('click', chiudiSelettoreMappa);
+  document.getElementById('mapPickerConfirmBtn').addEventListener('click', () => {
+    if (!mapPickerCoord || !mapPickerOnConfirm) { chiudiSelettoreMappa(); return; }
+    const statusEl = document.getElementById('mapPickerStatus');
+    const indirizzo = statusEl.dataset.indirizzo || (mapPickerCoord.lat.toFixed(5) + ', ' + mapPickerCoord.lon.toFixed(5));
+    mapPickerOnConfirm(indirizzo, mapPickerCoord);
+    chiudiSelettoreMappa();
+  });
+}
+function setupMapPickerButton(fieldId) {
+  const btn = document.getElementById(fieldId + 'MapBtn');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(fieldId);
+    apriSelettoreMappa((indirizzo, coord) => {
+      input.value = indirizzo;
+      puntoNotoCache.set(indirizzo, coord);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }, coordDaTesto(input.value));
+  });
+}
+
 function setupRoutingBlock(prefix) {
   const btn = document.getElementById(prefix + 'CalcolaBtn');
   const statusEl = document.getElementById(prefix + 'GeoStatus');
@@ -1556,13 +1981,16 @@ function setupRoutingBlock(prefix) {
     try {
       const indirizzi = [partenzaTxt, ...tappeTxt, arrivoTxt];
       const punti = [];
-      for (const ind of indirizzi) punti.push(await geocode(ind));
+      for (const ind of indirizzi) {
+        const noto = puntoNotoCache.get(ind);
+        punti.push(noto ? { lat: noto.lat, lon: noto.lon, display: ind } : await geocode(ind));
+      }
 
       statusEl.textContent = 'Calcolo del percorso in corso...';
       const route = await calcolaPercorsoMultiplo(punti);
 
-      const km = route.distance / 1000;
-      document.getElementById(prefix + 'Distanza').value = km.toFixed(1);
+      const km = Math.round(route.distance / 1000 * 10) / 10;
+      document.getElementById(prefix + 'Distanza').value = km;
       const p = profiloCorrente();
       (prefix === 'and' ? p.andata : p.ritorno).distanza = km;
       scheduleSave();
@@ -1620,6 +2048,7 @@ function setupGeoButton(prefix) {
         statusEl.textContent = 'Posizione trovata, ricerca indirizzo...';
         const indirizzo = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
         document.getElementById(prefix + 'Partenza').value = indirizzo;
+        puntoNotoCache.set(indirizzo, { lat: pos.coords.latitude, lon: pos.coords.longitude });
         const p = profiloCorrente();
         (prefix === 'and' ? p.andata : p.ritorno).partenza = indirizzo;
         scheduleSave();
@@ -2046,6 +2475,11 @@ function initEventi() {
   setupRoutingBlock('ret');
   setupGeoButton('and');
   setupGeoButton('ret');
+
+  ['andPartenza', 'andArrivo', 'retPartenza', 'retArrivo'].forEach(id => attachAutocomplete(document.getElementById(id)));
+  setupMapPicker();
+  ['andPartenza', 'andArrivo', 'retPartenza', 'retArrivo'].forEach(setupMapPickerButton);
+  setupConsumoAssist();
 
   document.getElementById('giorni').addEventListener('input', e => {
     profiloCorrente().giorniSettimana = parseFloat(e.target.value) || 0;
