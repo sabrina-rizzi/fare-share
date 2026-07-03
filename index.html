@@ -89,7 +89,6 @@
     font-size: 13.5px;
     color: var(--text-2);
     margin: 0 0 20px;
-    max-width: 46ch;
   }
   h2.card-title {
     font-size: 11px;
@@ -305,6 +304,7 @@
   .list-row input[type="text"] { flex: 2; min-width: 0; }
   .list-row input[type="number"] { flex: 1; min-width: 0; }
   .list-row select { flex: 1; min-width: 0; }
+  .list-row input[type="date"] { flex: 0 0 150px; min-width: 0; }
 
   .warning-banner {
     background: var(--warn-bg);
@@ -446,6 +446,7 @@
         <select id="vTipo">
           <option value="benzina">Benzina</option>
           <option value="diesel">Diesel</option>
+          <option value="metano">Metano</option>
           <option value="elettrico">Elettrico</option>
         </select>
       </div>
@@ -603,7 +604,7 @@
 
     <div class="card">
       <h2 class="card-title">Spese extra</h2>
-      <p class="section-hint">Pedaggi, parcheggio, usura/manutenzione (es. €/km) e altre voci da dividere insieme al carburante.</p>
+      <p class="section-hint">Pedaggi, parcheggio, usura/manutenzione e altre voci da dividere insieme al carburante. Valori indicativi per l'usura: manutenzione ordinaria + pneumatici ≈ <b>0,04–0,10 €/km</b>; tenendo conto anche della svalutazione dell'auto si arriva spesso a <b>0,15–0,25 €/km</b>. Moltiplica per i km del periodo (es. 0,06 €/km × 400 km/mese ≈ 24 €/mese).</p>
       <div id="speseList"></div>
       <button type="button" class="secondary" id="addSpesaBtn">+ Aggiungi spesa</button>
       <p class="status-line" id="speseTotale"></p>
@@ -733,7 +734,7 @@ const LS_HISTORY = 'tragitto_storico_v3';
 const LS_FUEL_CACHE = 'tragitto_prezzo_mimit_v1';
 const SCHEMA_VERSION = 3;
 
-const CO2_FACTORS_G_KM = { benzina: 192, diesel: 171, elettrico: 55 };
+const CO2_FACTORS_G_KM = { benzina: 192, diesel: 171, metano: 120, elettrico: 55 };
 const PALETTE = ['#4d6b5a', '#c07d4a', '#3f6f8c', '#9a6a86', '#7d8a4a', '#b4763c', '#5a8a7d', '#8a5a52'];
 const GIORNI_ORDER = ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom'];
 
@@ -946,11 +947,25 @@ function renderAll() {
 
 function aggiornaEtichetteVeicolo() {
   const p = profiloCorrente();
-  const elettrico = p.veicolo.tipo === 'elettrico';
-  document.getElementById('vConsumoLabel').textContent = elettrico ? 'Consumo (kWh/100km)' : 'Consumo auto (km/l)';
-  document.getElementById('vPrezzoLabel').textContent = elettrico ? 'Prezzo energia (EUR/kWh)' : 'Prezzo carburante (EUR/l)';
-  document.getElementById('vConsumoInattivitaLabel').textContent = elettrico ? 'Consumo ausiliari in coda (kW)' : 'Consumo al minimo in coda (l/h)';
-  document.getElementById('mimitBox').style.display = elettrico ? 'none' : 'block';
+  const tipo = p.veicolo.tipo;
+  let consumoLbl, prezzoLbl, inattivitaLbl;
+  if (tipo === 'elettrico') {
+    consumoLbl = 'Consumo (kWh/100km)';
+    prezzoLbl = 'Prezzo energia (EUR/kWh)';
+    inattivitaLbl = 'Consumo ausiliari in coda (kW)';
+  } else if (tipo === 'metano') {
+    consumoLbl = 'Consumo auto (km/kg)';
+    prezzoLbl = 'Prezzo metano (EUR/kg)';
+    inattivitaLbl = 'Consumo al minimo in coda (kg/h)';
+  } else {
+    consumoLbl = 'Consumo auto (km/l)';
+    prezzoLbl = 'Prezzo carburante (EUR/l)';
+    inattivitaLbl = 'Consumo al minimo in coda (l/h)';
+  }
+  document.getElementById('vConsumoLabel').textContent = consumoLbl;
+  document.getElementById('vPrezzoLabel').textContent = prezzoLbl;
+  document.getElementById('vConsumoInattivitaLabel').textContent = inattivitaLbl;
+  document.getElementById('mimitBox').style.display = tipo === 'elettrico' ? 'none' : 'block';
 }
 
 /* ============================================================
@@ -1615,21 +1630,25 @@ async function fetchPrezziMimit() {
     const m = righe[0] && righe[0].match(/(\d{4}-\d{2}-\d{2})/);
     if (m) dataEstrazione = m[1];
 
-    let sumBenzina = 0, cntBenzina = 0, sumGasolio = 0, cntGasolio = 0;
+    let sumBenzina = 0, cntBenzina = 0, sumGasolio = 0, cntGasolio = 0, sumMetano = 0, cntMetano = 0;
     for (let i = 2; i < righe.length; i++) {
       const cols = righe[i].split('|');
       if (cols.length < 4) continue;
       const carburante = cols[1];
       const prezzo = parseFloat(cols[2]);
       const isSelf = cols[3].trim() === '1';
-      if (!isSelf || !isFinite(prezzo) || prezzo <= 0) continue;
+      if (!isFinite(prezzo) || prezzo <= 0) continue;
+      // Il metano è quasi sempre servito (non self), quindi lo conteggiamo a prescindere.
+      if (carburante === 'Metano') { sumMetano += prezzo; cntMetano++; continue; }
+      if (!isSelf) continue;
       if (carburante === 'Benzina') { sumBenzina += prezzo; cntBenzina++; }
       else if (carburante === 'Gasolio') { sumGasolio += prezzo; cntGasolio++; }
     }
-    if (!cntBenzina && !cntGasolio) throw new Error('Formato dati non riconosciuto.');
+    if (!cntBenzina && !cntGasolio && !cntMetano) throw new Error('Formato dati non riconosciuto.');
     return {
       benzina: cntBenzina ? sumBenzina / cntBenzina : null,
       diesel: cntGasolio ? sumGasolio / cntGasolio : null,
+      metano: cntMetano ? sumMetano / cntMetano : null,
       dataEstrazione,
       fetchedAt: Date.now()
     };
@@ -1673,7 +1692,9 @@ async function aggiornaPrezzoMimit(automatico) {
   try {
     const dati = await fetchPrezziMimit();
     salvaFuelCache(dati);
-    const valore = p.veicolo.tipo === 'diesel' ? dati.diesel : dati.benzina;
+    const valore = p.veicolo.tipo === 'diesel' ? dati.diesel
+      : p.veicolo.tipo === 'metano' ? dati.metano
+      : dati.benzina;
     if (valore && !p.veicolo.prezzoManuale) {
       p.veicolo.prezzo = Math.round(valore * 1000) / 1000;
       document.getElementById('vPrezzo').value = p.veicolo.prezzo;
