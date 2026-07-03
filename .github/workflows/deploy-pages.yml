@@ -1,0 +1,49 @@
+name: Pubblica su GitHub Pages
+
+# Deploy diretto (senza Jekyll) del sito statico su GitHub Pages, usando le
+# action ufficiali consigliate da GitHub. Sostituisce il vecchio meccanismo
+# "Deploy from a branch", che per questo repo ha dato errori di deploy
+# intermittenti. Richiede di impostare Settings > Pages > Source su
+# "GitHub Actions" (non più "Deploy from a branch").
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configura Pages
+        uses: actions/configure-pages@v5
+
+      - name: Prepara cartella del sito (solo asset dell'app, niente file interni)
+        run: |
+          mkdir _site
+          cp index.html manifest.json sw.js icon-192.png icon-512.png prezzi-carburante.json _site/
+          touch _site/.nojekyll
+
+      - name: Prepara artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy su GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
