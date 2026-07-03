@@ -1,0 +1,13 @@
+{
+  "benzina": 1.807,
+  "diesel": 1.886,
+  "metano": 1.553,
+  "dataEstrazione": "2026-07-02",
+  "aggiornatoIl": "2026-07-03T07:31:07+00:00",
+  "campioni": {
+    "benzina": 20273,
+    "diesel": 20257,
+    "metano": 1587
+  },
+  "fonte": "Osservatorio Prezzi Carburanti - MIMIT"
+}

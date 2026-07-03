@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fare-share-v7';
+const CACHE_NAME = 'fare-share-v8';
 
 // App shell (stesso dominio) + librerie esterne che non cambiano spesso:
 // cacheate cache-first così l'app e la mappa restano utilizzabili offline
@@ -17,15 +17,12 @@ const APP_SHELL = [
 ];
 
 // Host di servizi che devono restare "network-first" perché servono dati
-// aggiornati (geocodifica, percorso, tile mappa, prezzo carburante) e
-// funzionano comunque solo online: se falliscono, l'app deve continuare
-// a funzionare con inserimento manuale, senza bloccare nulla.
+// aggiornati (geocodifica, percorso, tile mappa) e funzionano comunque solo
+// online: se falliscono, l'app deve continuare a funzionare senza bloccare nulla.
 const NETWORK_FIRST_HOSTS = [
   'nominatim.openstreetmap.org',
   'router.project-osrm.org',
-  'tile.openstreetmap.org',
-  'www.mimit.gov.it',
-  'mimit.gov.it'
+  'tile.openstreetmap.org'
 ];
 
 self.addEventListener('install', (event) => {
@@ -54,6 +51,22 @@ self.addEventListener('fetch', (event) => {
   if (NETWORK_FIRST_HOSTS.some((host) => url.hostname === host || url.hostname.endsWith('.' + host))) {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Prezzi carburante (same-origin, aggiornato ogni giorno dalla GitHub Action):
+  // network-first così mostra il valore più recente, con fallback all'ultimo noto
+  // quando si è offline.
+  if (url.pathname.endsWith('prezzi-carburante.json')) {
+    event.respondWith(
+      fetch(event.request).then((response) => {
+        if (response && response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      }).catch(() => caches.match(event.request))
     );
     return;
   }

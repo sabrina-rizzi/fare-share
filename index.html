@@ -1640,43 +1640,28 @@ function setupGeoButton(prefix) {
 
 /* ============================================================
    Prezzo carburante — Osservatorio Prezzi Carburanti MIMIT
-   Nota: il file CSV pubblico del MIMIT non espone header CORS pensati
-   per fetch cross-origin da browser; il tentativo qui sotto è "best effort"
-   e deve sempre fallire in modo pulito lasciando il campo modificabile a mano.
+   Il CSV pubblico del MIMIT (~4 MB) non espone header CORS, quindi non è
+   leggibile direttamente dal browser. Una GitHub Action giornaliera scarica il
+   CSV, calcola le medie nazionali e le salva in "prezzi-carburante.json", servito
+   dalla stessa origine dell'app: niente CORS, pochi byte, sempre aggiornato.
+   Vedi scripts/aggiorna-prezzi-carburante.py e .github/workflows/aggiorna-prezzi.yml.
    ============================================================ */
 async function fetchPrezziMimit() {
-  const url = 'https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv';
+  const url = './prezzi-carburante.json';
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
   try {
-    const res = await fetch(url, { signal: controller.signal });
-    if (!res.ok) throw new Error('Servizio non raggiungibile (HTTP ' + res.status + ')');
-    const text = await res.text();
-    const righe = text.split('\n');
-    let dataEstrazione = '';
-    const m = righe[0] && righe[0].match(/(\d{4}-\d{2}-\d{2})/);
-    if (m) dataEstrazione = m[1];
-
-    let sumBenzina = 0, cntBenzina = 0, sumGasolio = 0, cntGasolio = 0, sumMetano = 0, cntMetano = 0;
-    for (let i = 2; i < righe.length; i++) {
-      const cols = righe[i].split('|');
-      if (cols.length < 4) continue;
-      const carburante = cols[1];
-      const prezzo = parseFloat(cols[2]);
-      const isSelf = cols[3].trim() === '1';
-      if (!isFinite(prezzo) || prezzo <= 0) continue;
-      // Il metano è quasi sempre servito (non self), quindi lo conteggiamo a prescindere.
-      if (carburante === 'Metano') { sumMetano += prezzo; cntMetano++; continue; }
-      if (!isSelf) continue;
-      if (carburante === 'Benzina') { sumBenzina += prezzo; cntBenzina++; }
-      else if (carburante === 'Gasolio') { sumGasolio += prezzo; cntGasolio++; }
+    const res = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+    if (!res.ok) throw new Error('File prezzi non disponibile (HTTP ' + res.status + ')');
+    const data = await res.json();
+    if (data.benzina == null && data.diesel == null && data.metano == null) {
+      throw new Error('Nessun prezzo disponibile nel file.');
     }
-    if (!cntBenzina && !cntGasolio && !cntMetano) throw new Error('Formato dati non riconosciuto.');
     return {
-      benzina: cntBenzina ? sumBenzina / cntBenzina : null,
-      diesel: cntGasolio ? sumGasolio / cntGasolio : null,
-      metano: cntMetano ? sumMetano / cntMetano : null,
-      dataEstrazione,
+      benzina: data.benzina != null ? data.benzina : null,
+      diesel: data.diesel != null ? data.diesel : null,
+      metano: data.metano != null ? data.metano : null,
+      dataEstrazione: data.dataEstrazione || '',
       fetchedAt: Date.now()
     };
   } finally {
@@ -1731,7 +1716,7 @@ async function aggiornaPrezzoMimit(automatico) {
     renderMimitStatus();
   } catch (err) {
     console.warn('Aggiornamento prezzo MIMIT non riuscito (offline, CORS o endpoint cambiato):', err);
-    renderMimitStatus({ text: 'Servizio non raggiungibile al momento (offline o restrizioni del sito del Ministero). Puoi comunque inserire il prezzo a mano.', cls: 'error' });
+    renderMimitStatus({ text: 'Prezzi non disponibili al momento (sei offline, oppure il file dei prezzi non è ancora stato generato). Puoi comunque inserire il prezzo a mano.', cls: 'error' });
   } finally {
     if (!automatico) btn.disabled = false;
   }
