@@ -1,12 +1,16 @@
 <div align="center">
-  <img src="icon-192.png" width="88" height="88" alt="Logo Costo tragitto condiviso">
-  <h1>Costo tragitto condiviso</h1>
-  <p><em>PWA per calcolare e dividere il costo di uno spostamento condiviso in auto.</em></p>
+  <img src="icon-192.png" width="88" height="88" alt="Logo Fare Share">
+  <h1>Fare Share</h1>
+  <p><em>Costo tragitto condiviso — PWA per calcolare e dividere il costo di uno spostamento in auto.</em></p>
 </div>
 
 ---
 
-**Costo tragitto condiviso** è una web app installabile (PWA) che calcola quanto costa un
+> **Perché "Fare Share"?** Gioco di parole: *fare* in inglese è il **costo del viaggio**,
+> e si legge come *"fair share"*, la **giusta parte** che ognuno deve pagare. In due parole:
+> dividere il costo del tragitto in modo equo.
+
+**Fare Share** è una web app installabile (PWA) che calcola quanto costa un
 tragitto in auto — carburante, extra dovuto al traffico, spese accessorie — e ripartisce
 la spesa tra le persone che lo condividono. Funziona **offline**, **senza account**,
 **senza backend** e **senza API a pagamento**: tutti i dati restano sul dispositivo.

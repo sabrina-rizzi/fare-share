@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Costo tragitto condiviso</title>
+<title>Fare Share — Costo tragitto condiviso</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#23302B">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Tragitto">
+<meta name="apple-mobile-web-app-title" content="Fare Share">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   :root {
@@ -76,8 +76,10 @@
     box-shadow: var(--shadow);
   }
   .brand-mark svg { width: 26px; height: 26px; display: block; }
+  .brand-text { display: flex; flex-direction: column; gap: 1px; }
+  .brand-tagline { font-size: 12px; color: var(--text-3); font-weight: 500; letter-spacing: 0.005em; }
   h1 {
-    font-size: 20px;
+    font-size: 21px;
     font-weight: 650;
     letter-spacing: -0.015em;
     margin: 0;
@@ -406,7 +408,10 @@
         <circle cx="42" cy="22" r="5" fill="#8ca898"/>
       </svg>
     </span>
-    <h1>Costo tragitto condiviso</h1>
+    <span class="brand-text">
+      <h1>Fare Share</h1>
+      <span class="brand-tagline">Costo tragitto condiviso</span>
+    </span>
   </header>
   <p class="sub">Calcola il costo di un tragitto casa-lavoro (o di qualsiasi altro spostamento) e la quota da dividere con le persone con cui lo condividi.</p>
 

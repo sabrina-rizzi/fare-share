@@ -1,6 +1,6 @@
 {
-  "name": "Costo tragitto condiviso",
-  "short_name": "Tragitto",
+  "name": "Fare Share — Costo tragitto condiviso",
+  "short_name": "Fare Share",
   "description": "Calcola il costo di un tragitto condiviso con altre persone, incluso il traffico, e tiene traccia di spese e saldi.",
   "start_url": "./index.html",
   "scope": "./",
