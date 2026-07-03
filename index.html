@@ -472,7 +472,11 @@
         </div>
       </div>
       <div class="field" id="mimitBox">
-        <button type="button" class="ghost" id="mimitRefreshBtn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-.5 4"/><path d="M20 5v6h-6"/></svg>Aggiorna prezzo da Osservatorio MIMIT</button>
+        <label for="vProvincia" class="mini-label">Zona di riferimento per il prezzo</label>
+        <select id="vProvincia">
+          <option value="">Italia (media nazionale)</option>
+        </select>
+        <button type="button" class="ghost" id="mimitRefreshBtn" style="margin-top: 6px;"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-.5 4"/><path d="M20 5v6h-6"/></svg>Aggiorna prezzo da Osservatorio MIMIT</button>
         <p class="status-line" id="mimitStatus"></p>
       </div>
       <div class="field" style="margin-top: 8px;">
@@ -734,7 +738,7 @@
       <ul class="privacy-list">
         <li><b>OpenStreetMap / Nominatim</b> — ricerca degli indirizzi e geolocalizzazione inversa</li>
         <li><b>OSRM</b> — calcolo del percorso e della distanza</li>
-        <li><b>Osservatorio prezzi MIMIT</b> — prezzo medio del carburante (facoltativo)</li>
+        <li><b>Osservatorio prezzi MIMIT</b> — prezzo medio nazionale o per provincia del carburante (facoltativo). Le medie sono calcolate una volta al giorno lato server: la scelta della tua zona resta solo su questo dispositivo, non viene inviata da nessuna parte</li>
       </ul>
       <p class="section-hint">Nessuno di questi richiede registrazione o chiavi. Per cancellare i dati salvati puoi eliminare i singoli tragitti, pulire lo storico dalla scheda "Storico", oppure svuotare i dati del sito dalle impostazioni del browser.</p>
     </div>
@@ -813,7 +817,7 @@ function nuovoProfilo(nome) {
     nome: nome || 'Nuovo tragitto',
     createdAt: Date.now(),
     updatedAt: Date.now(),
-    veicolo: { tipo: 'benzina', consumo: 15, prezzo: 1.85, prezzoManuale: false, consumoInattivita: 0.7 },
+    veicolo: { tipo: 'benzina', consumo: 15, prezzo: 1.85, prezzoManuale: false, consumoInattivita: 0.7, provincia: '' },
     routeMode: 'ar_stesso',
     andata: { distanza: 15, partenza: '', arrivo: '', tappe: [] },
     ritorno: { distanza: 15, partenza: '', arrivo: '', tappe: [] },
@@ -932,6 +936,8 @@ function renderAll() {
   document.getElementById('vConsumo').value = p.veicolo.consumo;
   document.getElementById('vPrezzo').value = p.veicolo.prezzo;
   document.getElementById('vConsumoInattivita').value = p.veicolo.consumoInattivita;
+  popolaProvinceSelect(caricaFuelCache());
+  document.getElementById('vProvincia').value = p.veicolo.provincia || '';
   aggiornaEtichetteVeicolo();
 
   document.getElementById('routeMode').value = p.routeMode;
@@ -1640,10 +1646,11 @@ function setupGeoButton(prefix) {
 
 /* ============================================================
    Prezzo carburante — Osservatorio Prezzi Carburanti MIMIT
-   Il CSV pubblico del MIMIT (~4 MB) non espone header CORS, quindi non è
-   leggibile direttamente dal browser. Una GitHub Action giornaliera scarica il
-   CSV, calcola le medie nazionali e le salva in "prezzi-carburante.json", servito
-   dalla stessa origine dell'app: niente CORS, pochi byte, sempre aggiornato.
+   Il CSV pubblico del MIMIT (alcuni MB) non espone header CORS, quindi non è
+   leggibile direttamente dal browser. Una GitHub Action giornaliera scarica i
+   CSV (prezzi + anagrafica impianti), calcola le medie nazionali e per
+   provincia, e le salva in "prezzi-carburante.json", servito dalla stessa
+   origine dell'app: niente CORS, poche decine di KB, sempre aggiornato.
    Vedi scripts/aggiorna-prezzi-carburante.py e .github/workflows/aggiorna-prezzi.yml.
    ============================================================ */
 async function fetchPrezziMimit() {
@@ -1657,13 +1664,7 @@ async function fetchPrezziMimit() {
     if (data.benzina == null && data.diesel == null && data.metano == null) {
       throw new Error('Nessun prezzo disponibile nel file.');
     }
-    return {
-      benzina: data.benzina != null ? data.benzina : null,
-      diesel: data.diesel != null ? data.diesel : null,
-      metano: data.metano != null ? data.metano : null,
-      dataEstrazione: data.dataEstrazione || '',
-      fetchedAt: Date.now()
-    };
+    return { ...data, fetchedAt: Date.now() };
   } finally {
     clearTimeout(timeout);
   }
@@ -1679,6 +1680,48 @@ function salvaFuelCache(c) {
   try { localStorage.setItem(LS_FUEL_CACHE, JSON.stringify(c)); } catch (err) { /* storage non disponibile: ignorato */ }
 }
 
+function chiaveCarburante(tipoVeicolo) {
+  return tipoVeicolo === 'diesel' ? 'diesel' : tipoVeicolo === 'metano' ? 'metano' : 'benzina';
+}
+
+// Sceglie il prezzo migliore disponibile: media della provincia selezionata se
+// presente e sufficientemente campionata, altrimenti media nazionale.
+function valorePerCarburante(dati, tipoVeicolo, provincia) {
+  const chiave = chiaveCarburante(tipoVeicolo);
+  if (provincia && dati && dati.province && dati.province[provincia]) {
+    const v = dati.province[provincia][chiave];
+    if (v != null) return { valore: v, fonte: 'provincia' };
+  }
+  const nazionale = dati ? dati[chiave] : null;
+  return { valore: nazionale != null ? nazionale : null, fonte: 'nazionale' };
+}
+
+function popolaProvinceSelect(dati) {
+  const sel = document.getElementById('vProvincia');
+  if (!sel || !dati || !dati.province) return;
+  const selezionePrecedente = sel.value;
+  const voci = Object.entries(dati.province)
+    .map(([sigla, d]) => ({ sigla, nome: d.nome || sigla }))
+    .sort((a, b) => a.nome.localeCompare(b.nome, 'it'));
+  sel.innerHTML = '<option value="">Italia (media nazionale)</option>' +
+    voci.map(v => '<option value="' + v.sigla + '">' + v.nome + ' (' + v.sigla + ')</option>').join('');
+  if ([...sel.options].some(o => o.value === selezionePrecedente)) sel.value = selezionePrecedente;
+}
+
+// Applica alla scheda veicolo il prezzo automatico (provincia o nazionale) per
+// il carburante e la zona attualmente selezionati, salvo che l'utente non
+// abbia impostato il prezzo a mano.
+function applicaPrezzoDaDati(dati) {
+  const p = profiloCorrente();
+  if (p.veicolo.prezzoManuale) return;
+  const scelto = valorePerCarburante(dati, p.veicolo.tipo, p.veicolo.provincia);
+  if (scelto.valore == null) return;
+  p.veicolo.prezzo = Math.round(scelto.valore * 1000) / 1000;
+  document.getElementById('vPrezzo').value = p.veicolo.prezzo;
+  scheduleSave();
+  recalcola();
+}
+
 function renderMimitStatus(msgOverride) {
   const el = document.getElementById('mimitStatus');
   if (msgOverride) { el.textContent = msgOverride.text; el.className = 'status-line ' + (msgOverride.cls || ''); return; }
@@ -1688,7 +1731,15 @@ function renderMimitStatus(msgOverride) {
     el.textContent = 'Prezzo impostato manualmente (ha sempre la precedenza).';
     el.className = 'status-line';
   } else if (cache && cache.fetchedAt) {
-    el.textContent = 'Ultimo aggiornamento riuscito: ' + fmtDate(cache.fetchedAt) + (cache.dataEstrazione ? ' (dati del ' + cache.dataEstrazione + ')' : '') + '.';
+    const scelto = valorePerCarburante(cache, p.veicolo.tipo, p.veicolo.provincia);
+    let fonteTxt = 'media nazionale';
+    if (scelto.fonte === 'provincia') {
+      const nomeProv = (cache.province[p.veicolo.provincia] || {}).nome || p.veicolo.provincia;
+      fonteTxt = 'media provincia di ' + nomeProv;
+    } else if (p.veicolo.provincia) {
+      fonteTxt = 'media nazionale (dati provinciali non ancora sufficienti per questo carburante)';
+    }
+    el.textContent = 'Ultimo aggiornamento riuscito: ' + fmtDate(cache.fetchedAt) + (cache.dataEstrazione ? ' (dati del ' + cache.dataEstrazione + ')' : '') + ' — ' + fonteTxt + '.';
     el.className = 'status-line ok';
   } else {
     el.textContent = 'Nessun aggiornamento automatico ancora riuscito. Il prezzo è inseribile sempre a mano.';
@@ -1704,15 +1755,8 @@ async function aggiornaPrezzoMimit(automatico) {
   try {
     const dati = await fetchPrezziMimit();
     salvaFuelCache(dati);
-    const valore = p.veicolo.tipo === 'diesel' ? dati.diesel
-      : p.veicolo.tipo === 'metano' ? dati.metano
-      : dati.benzina;
-    if (valore && !p.veicolo.prezzoManuale) {
-      p.veicolo.prezzo = Math.round(valore * 1000) / 1000;
-      document.getElementById('vPrezzo').value = p.veicolo.prezzo;
-      scheduleSave();
-      recalcola();
-    }
+    popolaProvinceSelect(dati);
+    applicaPrezzoDaDati(dati);
     renderMimitStatus();
   } catch (err) {
     console.warn('Aggiornamento prezzo MIMIT non riuscito (offline, CORS o endpoint cambiato):', err);
@@ -1940,8 +1984,17 @@ function initEventi() {
   document.getElementById('vTipo').addEventListener('change', e => {
     profiloCorrente().veicolo.tipo = e.target.value;
     aggiornaEtichetteVeicolo();
+    const cache = caricaFuelCache();
+    if (cache) applicaPrezzoDaDati(cache);
     scheduleSave();
     recalcola();
+    renderMimitStatus();
+  });
+  document.getElementById('vProvincia').addEventListener('change', e => {
+    profiloCorrente().veicolo.provincia = e.target.value;
+    scheduleSave();
+    const cache = caricaFuelCache();
+    if (cache) applicaPrezzoDaDati(cache);
     renderMimitStatus();
   });
   bindaCampoSemplice('vConsumo', null, (p, v) => p.veicolo.consumo = parseFloat(v) || 0);
