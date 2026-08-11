@@ -1,13 +1,13 @@
 {
-  "aggiornatoIl": "2026-08-10T08:13:47+00:00",
-  "benzina": 1.987,
+  "aggiornatoIl": "2026-08-11T07:45:51+00:00",
+  "benzina": 1.986,
   "campioni": {
-    "benzina": 20295,
-    "diesel": 20286,
-    "metano": 1584
+    "benzina": 20285,
+    "diesel": 20273,
+    "metano": 1582
   },
-  "dataEstrazione": "2026-08-09",
-  "diesel": 2.079,
+  "dataEstrazione": "2026-08-10",
+  "diesel": 2.078,
   "fonte": "Osservatorio Prezzi Carburanti - MIMIT",
   "metano": 1.631,
   "province": {
@@ -45,32 +45,32 @@
       "nome": "Ancona"
     },
     "AO": {
-      "benzina": 2.015,
+      "benzina": 2.014,
       "campioni": {
         "benzina": 67,
         "diesel": 67,
         "metano": 1
       },
-      "diesel": 2.088,
+      "diesel": 2.087,
       "metano": null,
       "nome": "Aosta"
     },
     "AP": {
-      "benzina": 1.982,
+      "benzina": 1.981,
       "campioni": {
-        "benzina": 88,
-        "diesel": 88,
+        "benzina": 87,
+        "diesel": 87,
         "metano": 12
       },
-      "diesel": 2.074,
+      "diesel": 2.073,
       "metano": 1.539,
       "nome": "Ascoli Piceno"
     },
     "AQ": {
       "benzina": 1.984,
       "campioni": {
-        "benzina": 131,
-        "diesel": 134,
+        "benzina": 130,
+        "diesel": 133,
         "metano": 14
       },
       "diesel": 2.089,
@@ -84,12 +84,12 @@
         "diesel": 141,
         "metano": 26
       },
-      "diesel": 2.086,
+      "diesel": 2.085,
       "metano": 1.658,
       "nome": "Arezzo"
     },
     "AT": {
-      "benzina": 1.95,
+      "benzina": 1.949,
       "campioni": {
         "benzina": 112,
         "diesel": 112,
@@ -100,18 +100,18 @@
       "nome": "Asti"
     },
     "AV": {
-      "benzina": 1.989,
+      "benzina": 1.988,
       "campioni": {
         "benzina": 183,
         "diesel": 185,
         "metano": 9
       },
-      "diesel": 2.092,
+      "diesel": 2.088,
       "metano": 1.668,
       "nome": "Avellino"
     },
     "BA": {
-      "benzina": 2.006,
+      "benzina": 2.005,
       "campioni": {
         "benzina": 361,
         "diesel": 364,
@@ -122,13 +122,13 @@
       "nome": "Bari"
     },
     "BG": {
-      "benzina": 1.978,
+      "benzina": 1.977,
       "campioni": {
         "benzina": 319,
         "diesel": 319,
         "metano": 31
       },
-      "diesel": 2.074,
+      "diesel": 2.073,
       "metano": 1.554,
       "nome": "Bergamo"
     },
@@ -144,13 +144,13 @@
       "nome": "Biella"
     },
     "BL": {
-      "benzina": 1.995,
+      "benzina": 1.994,
       "campioni": {
         "benzina": 96,
         "diesel": 94,
         "metano": 7
       },
-      "diesel": 2.075,
+      "diesel": 2.074,
       "metano": 1.612,
       "nome": "Belluno"
     },
@@ -161,18 +161,18 @@
         "diesel": 130,
         "metano": 11
       },
-      "diesel": 2.103,
+      "diesel": 2.102,
       "metano": 1.633,
       "nome": "Benevento"
     },
     "BO": {
-      "benzina": 1.979,
+      "benzina": 1.978,
       "campioni": {
         "benzina": 316,
         "diesel": 317,
         "metano": 49
       },
-      "diesel": 2.076,
+      "diesel": 2.075,
       "metano": 1.607,
       "nome": "Bologna"
     },
@@ -188,18 +188,18 @@
       "nome": "Brindisi"
     },
     "BS": {
-      "benzina": 1.988,
+      "benzina": 1.987,
       "campioni": {
         "benzina": 480,
         "diesel": 474,
         "metano": 37
       },
-      "diesel": 2.082,
+      "diesel": 2.081,
       "metano": 1.595,
       "nome": "Brescia"
     },
     "BT": {
-      "benzina": 1.984,
+      "benzina": 1.983,
       "campioni": {
         "benzina": 92,
         "diesel": 94,
@@ -210,35 +210,35 @@
       "nome": "Barletta-Andria-Trani"
     },
     "BZ": {
-      "benzina": 2.025,
+      "benzina": 2.024,
       "campioni": {
         "benzina": 154,
         "diesel": 155,
         "metano": 12
       },
-      "diesel": 2.131,
+      "diesel": 2.13,
       "metano": 1.764,
       "nome": "Bolzano"
     },
     "CA": {
-      "benzina": 1.967,
+      "benzina": 1.966,
       "campioni": {
-        "benzina": 129,
-        "diesel": 129,
+        "benzina": 130,
+        "diesel": 130,
         "metano": 0
       },
-      "diesel": 2.038,
+      "diesel": 2.037,
       "metano": null,
       "nome": "Cagliari"
     },
     "CB": {
-      "benzina": 1.994,
+      "benzina": 1.993,
       "campioni": {
-        "benzina": 102,
-        "diesel": 104,
+        "benzina": 100,
+        "diesel": 102,
         "metano": 7
       },
-      "diesel": 2.097,
+      "diesel": 2.094,
       "metano": 1.556,
       "nome": "Campobasso"
     },
@@ -249,7 +249,7 @@
         "diesel": 307,
         "metano": 30
       },
-      "diesel": 2.074,
+      "diesel": 2.072,
       "metano": 1.551,
       "nome": "Caserta"
     },
@@ -265,7 +265,7 @@
       "nome": "Chieti"
     },
     "CL": {
-      "benzina": 1.994,
+      "benzina": 1.993,
       "campioni": {
         "benzina": 83,
         "diesel": 83,
@@ -282,7 +282,7 @@
         "diesel": 298,
         "metano": 6
       },
-      "diesel": 2.078,
+      "diesel": 2.077,
       "metano": 1.697,
       "nome": "Cuneo"
     },
@@ -290,11 +290,11 @@
       "benzina": 1.978,
       "campioni": {
         "benzina": 107,
-        "diesel": 106,
-        "metano": 10
+        "diesel": 105,
+        "metano": 9
       },
-      "diesel": 2.071,
-      "metano": 1.619,
+      "diesel": 2.07,
+      "metano": 1.622,
       "nome": "Como"
     },
     "CR": {
@@ -304,12 +304,12 @@
         "diesel": 133,
         "metano": 8
       },
-      "diesel": 2.068,
+      "diesel": 2.067,
       "metano": 1.545,
       "nome": "Cremona"
     },
     "CS": {
-      "benzina": 2.009,
+      "benzina": 2.008,
       "campioni": {
         "benzina": 256,
         "diesel": 257,
@@ -320,13 +320,13 @@
       "nome": "Cosenza"
     },
     "CT": {
-      "benzina": 1.992,
+      "benzina": 1.991,
       "campioni": {
         "benzina": 363,
         "diesel": 365,
         "metano": 13
       },
-      "diesel": 2.09,
+      "diesel": 2.089,
       "metano": 1.835,
       "nome": "Catania"
     },
@@ -337,7 +337,7 @@
         "diesel": 143,
         "metano": 4
       },
-      "diesel": 2.087,
+      "diesel": 2.086,
       "metano": null,
       "nome": "Catanzaro"
     },
@@ -348,62 +348,62 @@
         "diesel": 55,
         "metano": 1
       },
-      "diesel": 2.094,
+      "diesel": 2.093,
       "metano": null,
       "nome": "Enna"
     },
     "FC": {
-      "benzina": 1.966,
+      "benzina": 1.965,
       "campioni": {
         "benzina": 151,
-        "diesel": 152,
+        "diesel": 151,
         "metano": 24
       },
-      "diesel": 2.06,
+      "diesel": 2.059,
       "metano": 1.591,
       "nome": "Forlì-Cesena"
     },
     "FE": {
-      "benzina": 1.971,
+      "benzina": 1.97,
       "campioni": {
-        "benzina": 147,
-        "diesel": 146,
+        "benzina": 146,
+        "diesel": 145,
         "metano": 30
       },
-      "diesel": 2.065,
-      "metano": 1.572,
+      "diesel": 2.064,
+      "metano": 1.57,
       "nome": "Ferrara"
     },
     "FG": {
       "benzina": 2.003,
       "campioni": {
-        "benzina": 194,
-        "diesel": 205,
+        "benzina": 193,
+        "diesel": 204,
         "metano": 13
       },
-      "diesel": 2.102,
+      "diesel": 2.1,
       "metano": 1.682,
       "nome": "Foggia"
     },
     "FI": {
-      "benzina": 1.986,
+      "benzina": 1.985,
       "campioni": {
-        "benzina": 285,
-        "diesel": 286,
+        "benzina": 284,
+        "diesel": 285,
         "metano": 43
       },
-      "diesel": 2.074,
+      "diesel": 2.073,
       "metano": 1.697,
       "nome": "Firenze"
     },
     "FM": {
-      "benzina": 1.98,
+      "benzina": 1.979,
       "campioni": {
         "benzina": 87,
         "diesel": 88,
         "metano": 19
       },
-      "diesel": 2.074,
+      "diesel": 2.073,
       "metano": 1.665,
       "nome": "Fermo"
     },
@@ -419,7 +419,7 @@
       "nome": "Frosinone"
     },
     "GE": {
-      "benzina": 1.992,
+      "benzina": 1.991,
       "campioni": {
         "benzina": 211,
         "diesel": 212,
@@ -430,7 +430,7 @@
       "nome": "Genova"
     },
     "GO": {
-      "benzina": 1.991,
+      "benzina": 1.99,
       "campioni": {
         "benzina": 40,
         "diesel": 40,
@@ -452,24 +452,24 @@
       "nome": "Grosseto"
     },
     "IM": {
-      "benzina": 2.002,
+      "benzina": 2.0,
       "campioni": {
         "benzina": 69,
         "diesel": 71,
         "metano": 1
       },
-      "diesel": 2.098,
+      "diesel": 2.096,
       "metano": null,
       "nome": "Imperia"
     },
     "IS": {
-      "benzina": 2.0,
+      "benzina": 1.999,
       "campioni": {
-        "benzina": 41,
-        "diesel": 41,
+        "benzina": 40,
+        "diesel": 40,
         "metano": 0
       },
-      "diesel": 2.097,
+      "diesel": 2.096,
       "metano": null,
       "nome": "Isernia"
     },
@@ -480,7 +480,7 @@
         "diesel": 45,
         "metano": 1
       },
-      "diesel": 2.118,
+      "diesel": 2.117,
       "metano": null,
       "nome": "Crotone"
     },
@@ -491,18 +491,18 @@
         "diesel": 84,
         "metano": 1
       },
-      "diesel": 2.08,
+      "diesel": 2.078,
       "metano": null,
       "nome": "Lecco"
     },
     "LE": {
-      "benzina": 2.001,
+      "benzina": 2.0,
       "campioni": {
         "benzina": 381,
         "diesel": 381,
         "metano": 20
       },
-      "diesel": 2.094,
+      "diesel": 2.093,
       "metano": 1.626,
       "nome": "Lecce"
     },
@@ -518,7 +518,7 @@
       "nome": "Livorno"
     },
     "LO": {
-      "benzina": 1.992,
+      "benzina": 1.991,
       "campioni": {
         "benzina": 69,
         "diesel": 69,
@@ -535,12 +535,12 @@
         "diesel": 241,
         "metano": 16
       },
-      "diesel": 2.067,
+      "diesel": 2.068,
       "metano": 1.713,
       "nome": "Latina"
     },
     "LU": {
-      "benzina": 1.992,
+      "benzina": 1.991,
       "campioni": {
         "benzina": 177,
         "diesel": 177,
@@ -562,13 +562,13 @@
       "nome": "Monza e della Brianza"
     },
     "MC": {
-      "benzina": 1.97,
+      "benzina": 1.969,
       "campioni": {
         "benzina": 153,
         "diesel": 152,
         "metano": 28
       },
-      "diesel": 2.054,
+      "diesel": 2.053,
       "metano": 1.508,
       "nome": "Macerata"
     },
@@ -579,12 +579,12 @@
         "diesel": 188,
         "metano": 7
       },
-      "diesel": 2.103,
+      "diesel": 2.102,
       "metano": 1.822,
       "nome": "Messina"
     },
     "MI": {
-      "benzina": 1.986,
+      "benzina": 1.985,
       "campioni": {
         "benzina": 659,
         "diesel": 650,
@@ -597,8 +597,8 @@
     "MN": {
       "benzina": 1.984,
       "campioni": {
-        "benzina": 167,
-        "diesel": 161,
+        "benzina": 168,
+        "diesel": 162,
         "metano": 15
       },
       "diesel": 2.069,
@@ -612,7 +612,7 @@
         "diesel": 257,
         "metano": 38
       },
-      "diesel": 2.083,
+      "diesel": 2.082,
       "metano": 1.661,
       "nome": "Modena"
     },
@@ -634,7 +634,7 @@
         "diesel": 70,
         "metano": 2
       },
-      "diesel": 2.086,
+      "diesel": 2.085,
       "metano": null,
       "nome": "Matera"
     },
@@ -645,18 +645,18 @@
         "diesel": 671,
         "metano": 53
       },
-      "diesel": 2.077,
+      "diesel": 2.075,
       "metano": 1.586,
       "nome": "Napoli"
     },
     "NO": {
-      "benzina": 1.982,
+      "benzina": 1.981,
       "campioni": {
         "benzina": 140,
         "diesel": 140,
         "metano": 8
       },
-      "diesel": 2.072,
+      "diesel": 2.071,
       "metano": 1.603,
       "nome": "Novara"
     },
@@ -667,29 +667,29 @@
         "diesel": 86,
         "metano": 0
       },
-      "diesel": 2.123,
+      "diesel": 2.12,
       "metano": null,
       "nome": "Nuoro"
     },
     "OR": {
-      "benzina": 1.993,
+      "benzina": 1.992,
       "campioni": {
         "benzina": 65,
         "diesel": 64,
         "metano": 0
       },
-      "diesel": 2.074,
+      "diesel": 2.073,
       "metano": null,
       "nome": "Oristano"
     },
     "PA": {
-      "benzina": 2.0,
+      "benzina": 1.999,
       "campioni": {
         "benzina": 321,
         "diesel": 323,
         "metano": 12
       },
-      "diesel": 2.11,
+      "diesel": 2.109,
       "metano": 2.007,
       "nome": "Palermo"
     },
@@ -700,7 +700,7 @@
         "diesel": 134,
         "metano": 16
       },
-      "diesel": 2.074,
+      "diesel": 2.073,
       "metano": 1.57,
       "nome": "Piacenza"
     },
@@ -711,7 +711,7 @@
         "diesel": 325,
         "metano": 41
       },
-      "diesel": 2.068,
+      "diesel": 2.067,
       "metano": 1.638,
       "nome": "Padova"
     },
@@ -719,7 +719,7 @@
       "benzina": 1.983,
       "campioni": {
         "benzina": 117,
-        "diesel": 117,
+        "diesel": 116,
         "metano": 9
       },
       "diesel": 2.07,
@@ -727,21 +727,21 @@
       "nome": "Pescara"
     },
     "PG": {
-      "benzina": 1.987,
+      "benzina": 1.986,
       "campioni": {
         "benzina": 303,
         "diesel": 301,
         "metano": 39
       },
-      "diesel": 2.071,
+      "diesel": 2.07,
       "metano": 1.591,
       "nome": "Perugia"
     },
     "PI": {
       "benzina": 1.98,
       "campioni": {
-        "benzina": 189,
-        "diesel": 191,
+        "benzina": 190,
+        "diesel": 192,
         "metano": 29
       },
       "diesel": 2.073,
@@ -749,13 +749,13 @@
       "nome": "Pisa"
     },
     "PN": {
-      "benzina": 1.999,
+      "benzina": 1.997,
       "campioni": {
         "benzina": 117,
         "diesel": 117,
         "metano": 4
       },
-      "diesel": 2.098,
+      "diesel": 2.097,
       "metano": null,
       "nome": "Pordenone"
     },
@@ -766,40 +766,40 @@
         "diesel": 69,
         "metano": 5
       },
-      "diesel": 2.086,
+      "diesel": 2.084,
       "metano": 1.67,
       "nome": "Prato"
     },
     "PR": {
-      "benzina": 1.986,
+      "benzina": 1.985,
       "campioni": {
         "benzina": 184,
         "diesel": 183,
         "metano": 22
       },
-      "diesel": 2.072,
+      "diesel": 2.071,
       "metano": 1.567,
       "nome": "Parma"
     },
     "PT": {
-      "benzina": 1.982,
+      "benzina": 1.983,
       "campioni": {
         "benzina": 101,
         "diesel": 101,
         "metano": 11
       },
-      "diesel": 2.09,
+      "diesel": 2.092,
       "metano": 1.661,
       "nome": "Pistoia"
     },
     "PU": {
-      "benzina": 1.979,
+      "benzina": 1.978,
       "campioni": {
         "benzina": 146,
-        "diesel": 148,
+        "diesel": 147,
         "metano": 18
       },
-      "diesel": 2.059,
+      "diesel": 2.06,
       "metano": 1.672,
       "nome": "Pesaro e Urbino"
     },
@@ -810,19 +810,19 @@
         "diesel": 184,
         "metano": 17
       },
-      "diesel": 2.075,
+      "diesel": 2.074,
       "metano": 1.629,
       "nome": "Pavia"
     },
     "PZ": {
-      "benzina": 2.003,
+      "benzina": 2.001,
       "campioni": {
         "benzina": 150,
         "diesel": 152,
         "metano": 13
       },
-      "diesel": 2.097,
-      "metano": 1.58,
+      "diesel": 2.096,
+      "metano": 1.584,
       "nome": "Potenza"
     },
     "RA": {
@@ -843,18 +843,18 @@
         "diesel": 186,
         "metano": 5
       },
-      "diesel": 2.102,
+      "diesel": 2.103,
       "metano": 1.698,
       "nome": "Reggio Calabria"
     },
     "RE": {
-      "benzina": 1.98,
+      "benzina": 1.979,
       "campioni": {
         "benzina": 189,
         "diesel": 184,
         "metano": 29
       },
-      "diesel": 2.069,
+      "diesel": 2.068,
       "metano": 1.571,
       "nome": "Reggio Emilia"
     },
@@ -872,8 +872,8 @@
     "RI": {
       "benzina": 1.974,
       "campioni": {
-        "benzina": 80,
-        "diesel": 79,
+        "benzina": 79,
+        "diesel": 78,
         "metano": 4
       },
       "diesel": 2.065,
@@ -883,16 +883,16 @@
     "RM": {
       "benzina": 1.979,
       "campioni": {
-        "benzina": 1171,
-        "diesel": 1167,
-        "metano": 58
+        "benzina": 1169,
+        "diesel": 1165,
+        "metano": 57
       },
       "diesel": 2.069,
-      "metano": 1.709,
+      "metano": 1.707,
       "nome": "Roma"
     },
     "RN": {
-      "benzina": 1.966,
+      "benzina": 1.965,
       "campioni": {
         "benzina": 124,
         "diesel": 123,
@@ -903,24 +903,24 @@
       "nome": "Rimini"
     },
     "RO": {
-      "benzina": 1.946,
+      "benzina": 1.945,
       "campioni": {
         "benzina": 124,
         "diesel": 123,
         "metano": 22
       },
-      "diesel": 2.027,
+      "diesel": 2.024,
       "metano": 1.551,
       "nome": "Rovigo"
     },
     "SA": {
-      "benzina": 1.995,
+      "benzina": 1.993,
       "campioni": {
         "benzina": 350,
         "diesel": 350,
         "metano": 33
       },
-      "diesel": 2.095,
+      "diesel": 2.093,
       "metano": 1.515,
       "nome": "Salerno"
     },
@@ -932,11 +932,11 @@
         "metano": 12
       },
       "diesel": 2.088,
-      "metano": 1.63,
+      "metano": 1.637,
       "nome": "Siena"
     },
     "SO": {
-      "benzina": 1.882,
+      "benzina": 1.881,
       "campioni": {
         "benzina": 62,
         "diesel": 62,
@@ -953,7 +953,7 @@
         "diesel": 74,
         "metano": 5
       },
-      "diesel": 2.069,
+      "diesel": 2.07,
       "metano": 1.726,
       "nome": "La Spezia"
     },
@@ -964,29 +964,29 @@
         "diesel": 146,
         "metano": 3
       },
-      "diesel": 2.096,
+      "diesel": 2.095,
       "metano": null,
       "nome": "Siracusa"
     },
     "SS": {
-      "benzina": 2.004,
+      "benzina": 2.002,
       "campioni": {
-        "benzina": 181,
-        "diesel": 181,
+        "benzina": 182,
+        "diesel": 182,
         "metano": 0
       },
-      "diesel": 2.096,
+      "diesel": 2.095,
       "metano": null,
       "nome": "Sassari"
     },
     "SU": {
-      "benzina": 1.995,
+      "benzina": 1.994,
       "campioni": {
-        "benzina": 134,
-        "diesel": 134,
+        "benzina": 135,
+        "diesel": 135,
         "metano": 0
       },
-      "diesel": 2.082,
+      "diesel": 2.08,
       "metano": null,
       "nome": "Sud Sardegna"
     },
@@ -1004,8 +1004,8 @@
     "TA": {
       "benzina": 2.004,
       "campioni": {
-        "benzina": 182,
-        "diesel": 182,
+        "benzina": 181,
+        "diesel": 181,
         "metano": 11
       },
       "diesel": 2.08,
@@ -1013,7 +1013,7 @@
       "nome": "Taranto"
     },
     "TE": {
-      "benzina": 1.987,
+      "benzina": 1.986,
       "campioni": {
         "benzina": 136,
         "diesel": 136,
@@ -1024,24 +1024,24 @@
       "nome": "Teramo"
     },
     "TN": {
-      "benzina": 1.999,
+      "benzina": 1.998,
       "campioni": {
         "benzina": 202,
         "diesel": 201,
         "metano": 9
       },
-      "diesel": 2.082,
+      "diesel": 2.081,
       "metano": 1.626,
       "nome": "Trento"
     },
     "TO": {
       "benzina": 1.983,
       "campioni": {
-        "benzina": 655,
-        "diesel": 655,
+        "benzina": 653,
+        "diesel": 654,
         "metano": 47
       },
-      "diesel": 2.074,
+      "diesel": 2.073,
       "metano": 1.638,
       "nome": "Torino"
     },
@@ -1057,10 +1057,10 @@
       "nome": "Trapani"
     },
     "TR": {
-      "benzina": 1.991,
+      "benzina": 1.99,
       "campioni": {
-        "benzina": 107,
-        "diesel": 107,
+        "benzina": 106,
+        "diesel": 106,
         "metano": 10
       },
       "diesel": 2.068,
@@ -1079,21 +1079,21 @@
       "nome": "Trieste"
     },
     "TV": {
-      "benzina": 1.977,
+      "benzina": 1.976,
       "campioni": {
         "benzina": 297,
         "diesel": 296,
         "metano": 24
       },
-      "diesel": 2.072,
+      "diesel": 2.071,
       "metano": 1.548,
       "nome": "Treviso"
     },
     "UD": {
       "benzina": 1.999,
       "campioni": {
-        "benzina": 218,
-        "diesel": 221,
+        "benzina": 219,
+        "diesel": 222,
         "metano": 7
       },
       "diesel": 2.097,
@@ -1101,7 +1101,7 @@
       "nome": "Udine"
     },
     "VA": {
-      "benzina": 1.991,
+      "benzina": 1.99,
       "campioni": {
         "benzina": 227,
         "diesel": 227,
@@ -1123,29 +1123,29 @@
       "nome": "Verbano-Cusio-Ossola"
     },
     "VC": {
-      "benzina": 1.971,
+      "benzina": 1.97,
       "campioni": {
-        "benzina": 81,
-        "diesel": 85,
+        "benzina": 80,
+        "diesel": 84,
         "metano": 4
       },
-      "diesel": 2.061,
+      "diesel": 2.06,
       "metano": null,
       "nome": "Vercelli"
     },
     "VE": {
-      "benzina": 1.979,
+      "benzina": 1.978,
       "campioni": {
         "benzina": 261,
         "diesel": 258,
         "metano": 19
       },
-      "diesel": 2.07,
+      "diesel": 2.068,
       "metano": 1.548,
       "nome": "Venezia"
     },
     "VI": {
-      "benzina": 1.981,
+      "benzina": 1.98,
       "campioni": {
         "benzina": 303,
         "diesel": 301,
@@ -1156,14 +1156,14 @@
       "nome": "Vicenza"
     },
     "VR": {
-      "benzina": 1.979,
+      "benzina": 1.978,
       "campioni": {
         "benzina": 333,
         "diesel": 318,
         "metano": 42
       },
-      "diesel": 2.069,
-      "metano": 1.623,
+      "diesel": 2.068,
+      "metano": 1.624,
       "nome": "Verona"
     },
     "VT": {
@@ -1184,7 +1184,7 @@
         "diesel": 54,
         "metano": 1
       },
-      "diesel": 2.088,
+      "diesel": 2.087,
       "metano": null,
       "nome": "Vibo Valentia"
     }
